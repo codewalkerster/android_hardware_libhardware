@@ -107,6 +107,12 @@ enum {
     /* buffer will be used as a RenderScript Allocation */
     GRALLOC_USAGE_RENDERSCRIPT          = 0x00100000,
 
+    GRALLOC_USAGE_HW_FIMC1        = 0x01000000,
+    GRALLOC_USAGE_HW_ION          = 0x02000000,
+    GRALLOC_USAGE_YUV_ADDR        = 0x04000000,
+    /* SEC Private usage , for Overlay path at HWC */
+    GRALLOC_USAGE_HWC_HWOVERLAY     = 0x20000000,
+	
     /* buffer should be displayed full-screen on an external display when
      * possible
      */
@@ -119,6 +125,14 @@ enum {
      * composition to the external sink.
      */
     GRALLOC_USAGE_PROTECTED             = 0x00004000,
+
+    /* SEC Private usage , for HWC to set HDMI S3D format */
+    /* HDMI should display this buffer as S3D SBS LR/RL*/
+    GRALLOC_USAGE_PRIVATE_SBS_LR       = 0x00100000,
+    GRALLOC_USAGE_PRIVATE_SBS_RL       = 0x00200000,
+    /* HDMI should display this buffer as 3D TB LR/RL*/
+    GRALLOC_USAGE_PRIVATE_TB_LR       = 0x00400000,
+    GRALLOC_USAGE_PRIVATE_TB_RL       = 0x00800000,
 
     /* implementation-specific private usage flags */
     GRALLOC_USAGE_PRIVATE_0             = 0x10000000,
@@ -220,7 +234,11 @@ typedef struct gralloc_module_t {
     int (*unlock)(struct gralloc_module_t const* module,
             buffer_handle_t handle);
 
+#if !defined(VITHAR_HACK)
+    int (*getphys)(struct gralloc_module_t const* module,
+            buffer_handle_t handle, void** paddr);
 
+#endif
     /* reserved for future use */
     int (*perform)(struct gralloc_module_t const* module,
             int operation, ... );
@@ -242,7 +260,7 @@ typedef struct gralloc_module_t {
             struct android_ycbcr *ycbcr);
 
     /* reserved for future use */
-    void* reserved_proc[6];
+    void* reserved_proc[5];
 } gralloc_module_t;
 
 /*****************************************************************************/
