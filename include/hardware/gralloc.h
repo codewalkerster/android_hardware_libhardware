@@ -101,6 +101,7 @@ enum {
     GRALLOC_USAGE_HW_CAMERA_ZSL         = 0x00060000,
     /* mask for the camera access values */
     GRALLOC_USAGE_HW_CAMERA_MASK        = 0x00060000,
+    GRALLOC_USAGE_HW_FB_PHY_LINEAR      = 0x00008000,
     /* mask for the software usage bit-mask */
     GRALLOC_USAGE_HW_MASK               = 0x00071F00,
 
@@ -126,6 +127,12 @@ enum {
     GRALLOC_USAGE_PRIVATE_2             = 0x40000000,
     GRALLOC_USAGE_PRIVATE_3             = 0x80000000,
     GRALLOC_USAGE_PRIVATE_MASK          = 0xF0000000,
+    GRALLOC_USAGE_INTERNAL_ONLY         = 0x10000000,
+    GRALLOC_USAGE_EXTERNAL_FLEXIBLE     = 0x20000000,
+    GRALLOC_USAGE_EXTERNAL_BLOCK        = 0x40000000,
+    GRALLOC_USAGE_EXTERNAL_ONLY         = 0x80000000,
+    GRALLOC_USAGE_EXTERNAL_VIRTUALFB    = 0x00400000,
+    GRALLOC_USAGE_PRIVATE_NONSECURE     = 0x02000000,
 };
 
 /*****************************************************************************/
