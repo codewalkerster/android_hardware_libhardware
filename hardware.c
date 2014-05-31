@@ -95,7 +95,9 @@ static int load(const char *id,
         goto done;
     }
 
-    hmi->dso = handle;
+	//codewalker for gps
+	if (hmi->dso)
+    	hmi->dso = handle;
 
     /* success */
     status = 0;
