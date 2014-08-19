@@ -171,6 +171,22 @@ enum {
      */
     HWC_DISPLAY_DPI_X                       = 4,
     HWC_DISPLAY_DPI_Y                       = 5,
+
+#ifdef USES_VIRTUAL_DISPLAY
+    /* In case of virtual display, HWC can be used even if there is no overlay layer.
+     * virtual display should know whether HWC is used or not.
+     */
+    HWC_DISPLAY_COMPOSITION_TYPE            = 6,
+
+    /* The format and usage can be changed by scenario in virtual display.
+     * virtual display should get the color format through HWC
+     */
+    HWC_DISPLAY_GLES_FORMAT                 = 7,
+    HWC_DISPLAY_SINK_BQ_FORMAT              = 8,
+    HWC_DISPLAY_SINK_BQ_USAGE               = 9,
+    HWC_DISPLAY_SINK_BQ_WIDTH               = 10,
+    HWC_DISPLAY_SINK_BQ_HEIGHT              = 11,
+#endif
 };
 
 /* Allowed events for hwc_methods::eventControl() */
