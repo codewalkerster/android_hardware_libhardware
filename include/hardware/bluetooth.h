@@ -1,4 +1,7 @@
 /*
+ * Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ * Not a Contribution
+ *
  * Copyright (C) 2012 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,14 +40,19 @@ __BEGIN_DECLS
 /* Bluetooth profile interface IDs */
 
 #define BT_PROFILE_HANDSFREE_ID "handsfree"
+#define BT_PROFILE_HANDSFREE_CLIENT_ID "handsfree_client"
 #define BT_PROFILE_ADVANCED_AUDIO_ID "a2dp"
 #define BT_PROFILE_HEALTH_ID "health"
 #define BT_PROFILE_SOCKETS_ID "socket"
 #define BT_PROFILE_HIDHOST_ID "hidhost"
+#define BT_PROFILE_HIDDEV_ID "hiddev"
 #define BT_PROFILE_PAN_ID "pan"
+#define BT_PROFILE_MAP_CLIENT_ID "map_client"
 
 #define BT_PROFILE_GATT_ID "gatt"
 #define BT_PROFILE_AV_RC_ID "avrcp"
+
+#define WIPOWER_PROFILE_ID "wipower"
 
 /** Bluetooth Address */
 typedef struct {
@@ -62,6 +70,14 @@ typedef enum {
     BT_SCAN_MODE_CONNECTABLE,
     BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE
 } bt_scan_mode_t;
+
+/*LE ADV modes*/
+typedef enum {
+    BLE_ADV_MODE_NONE,
+    BLE_ADV_IND_GENERAL_CONNECTABLE,
+    BLE_ADV_IND_LIMITED_CONNECTABLE,
+    BLE_ADV_DIR_CONNECTABLE
+} bt_ble_adv_mode_t;
 
 /** Bluetooth Adapter State */
 typedef enum {
@@ -83,7 +99,8 @@ typedef enum {
     BT_STATUS_PARM_INVALID,
     BT_STATUS_UNHANDLED,
     BT_STATUS_AUTH_FAILURE,
-    BT_STATUS_RMT_DEV_DOWN
+    BT_STATUS_RMT_DEV_DOWN,
+    BT_STATUS_AUTH_REJECTED
 
 } bt_status_t;
 
@@ -117,6 +134,12 @@ typedef struct
    char name[256]; // what's the maximum length
 } bt_service_record_t;
 
+/** Bluetooth service UUID info  */
+typedef struct
+{
+    uint8_t   uuidtype;
+    bt_uuid_t uuidval;
+} bt_le_service_t;
 
 /** Bluetooth Remote Version info */
 typedef struct
@@ -200,13 +223,22 @@ typedef enum {
      * Data type   - int32_t.
      */
     BT_PROPERTY_REMOTE_RSSI,
-    /**
+
+   /**
+    * Description - Trust value of the remote device
+    * Access mode - GET and SET
+    * Data type   - boolean.
+    */
+    BT_PROPERTY_REMOTE_TRUST_VALUE,
+   /**
      * Description - Remote version info
      * Access mode - SET/GET.
      * Data type   - bt_remote_version_t.
      */
 
     BT_PROPERTY_REMOTE_VERSION_INFO,
+
+    BT_PROPERTY_ADAPTER_BLE_ADV_MODE,
 
     BT_PROPERTY_REMOTE_DEVICE_TIMESTAMP = 0xFF,
 } bt_property_type_t;
@@ -278,9 +310,11 @@ typedef void (*device_found_callback)(int num_properties,
 /** Discovery state changed callback */
 typedef void (*discovery_state_changed_callback)(bt_discovery_state_t state);
 
+/** wake state changed callback */
+typedef void (*wake_state_changed_callback)(bt_state_t state);
 /** Bluetooth Legacy PinKey Request callback */
 typedef void (*pin_request_callback)(bt_bdaddr_t *remote_bd_addr,
-                                        bt_bdname_t *bd_name, uint32_t cod);
+                                        bt_bdname_t *bd_name, uint32_t cod, uint8_t secure);
 
 /** Bluetooth SSP Request callback - Just Works & Numeric Comparison*/
 /** pass_key - Shall be 0 for BT_SSP_PAIRING_VARIANT_CONSENT &
@@ -303,6 +337,25 @@ typedef void (*bond_state_changed_callback)(bt_status_t status,
 typedef void (*acl_state_changed_callback)(bt_status_t status, bt_bdaddr_t *remote_bd_addr,
                                             bt_acl_state_t state);
 
+typedef void (*le_adv_enable_callback)(uint8_t enable, uint8_t advType);
+
+typedef void (*le_extended_scan_result_callback)(bt_bdaddr_t* bda, int rssi, uint8_t* adv_data);
+
+/**  Callback invoked when write rssi threshold command complete */
+typedef void (*le_lpp_write_rssi_thresh_callback) (bt_bdaddr_t *bda, int status);
+
+/**  Callback invoked when read rssi threshold command complete */
+typedef void (*le_lpp_read_rssi_thresh_callback)(bt_bdaddr_t *bda, int low, int upper,
+                                                 int alert, int status);
+
+/**  Callback invoked when enable or disable rssi monitor command complete */
+typedef void (*le_lpp_enable_rssi_monitor_callback)(bt_bdaddr_t *bda,
+                                                    int enable, int status);
+
+/**  Callback triggered when rssi threshold event reported */
+typedef void (*le_lpp_rssi_threshold_evt_callback)(bt_bdaddr_t *bda,
+                                                   int evt_type, int rssi);
+
 typedef enum {
     ASSOCIATE_JVM,
     DISASSOCIATE_JVM
@@ -316,6 +369,10 @@ typedef void (*callback_thread_event)(bt_cb_thread_evt evt);
 /** Bluetooth Test Mode Callback */
 /* Receive any HCI event from controller. Must be in DUT Mode for this callback to be received */
 typedef void (*dut_mode_recv_callback)(uint16_t opcode, uint8_t *buf, uint8_t len);
+
+/** Bluetooth HCI event Callback */
+/* Receive any HCI event from controller for raw commands */
+typedef void (*hci_event_recv_callback)(uint8_t event_code, uint8_t *buf, uint8_t len);
 
 /* LE Test mode callbacks
 * This callback shall be invoked whenever the le_tx_test, le_rx_test or le_test_end is invoked
@@ -333,13 +390,21 @@ typedef struct {
     remote_device_properties_callback remote_device_properties_cb;
     device_found_callback device_found_cb;
     discovery_state_changed_callback discovery_state_changed_cb;
+    wake_state_changed_callback wake_state_changed_cb;
     pin_request_callback pin_request_cb;
     ssp_request_callback ssp_request_cb;
     bond_state_changed_callback bond_state_changed_cb;
     acl_state_changed_callback acl_state_changed_cb;
     callback_thread_event thread_evt_cb;
     dut_mode_recv_callback dut_mode_recv_cb;
+    hci_event_recv_callback hci_event_recv_cb;
     le_test_mode_callback le_test_mode_cb;
+    le_adv_enable_callback le_adv_enable_cb;
+    le_extended_scan_result_callback le_extended_scan_result_cb;
+    le_lpp_write_rssi_thresh_callback          le_lpp_write_rssi_thresh_cb;
+    le_lpp_read_rssi_thresh_callback           le_lpp_read_rssi_thresh_cb;
+    le_lpp_enable_rssi_monitor_callback        le_lpp_enable_rssi_monitor_cb;
+    le_lpp_rssi_threshold_evt_callback         le_lpp_rssi_threshold_evt_cb;
 } bt_callbacks_t;
 
 /** NOTE: By default, no profiles are initialized at the time of init/enable.
@@ -370,6 +435,9 @@ typedef struct {
      * to the implemenation of this interface.
      */
     int (*init)(bt_callbacks_t* callbacks );
+
+    /*adds callbacks for Q related calls to the btif env*/
+    int (*initq)(bt_callbacks_t* callbacks);
 
     /** Enable Bluetooth. */
     int (*enable)(void);
@@ -447,12 +515,36 @@ typedef struct {
 
     /* Send any test HCI (vendor-specific) command to the controller. Must be in DUT Mode */
     int (*dut_mode_send)(uint16_t opcode, uint8_t *buf, uint8_t len);
+
+    /* Send any test HCI command to the controller. */
+    int (*hci_cmd_send)(uint16_t opcode, uint8_t *buf, uint8_t len);
+
     /** BLE Test Mode APIs */
     /* opcode MUST be one of: LE_Receiver_Test, LE_Transmitter_Test, LE_Test_End */
     int (*le_test_mode)(uint16_t opcode, uint8_t *buf, uint8_t len);
 
+    int (*le_set_adv_params) (uint16_t int_min, uint16_t int_max, const bt_bdaddr_t *bd_addr, uint8_t ad_type);
+
+    int (*le_set_adv_data_mask) (uint16_t dMask);
+
+    int (*le_set_scan_resp_mask) (uint16_t dMask);
+
+    int (*le_set_manu_data) (uint8_t *buf, uint8_t len);
+
+    int (*le_set_service_data) (uint8_t *buf, uint8_t len);
+
     /* enable or disable bluetooth HCI snoop log */
     int (*config_hci_snoop_log)(uint8_t enable);
+    /** Scan with filter: white list, advertising data based white list, or both*/
+    bt_status_t (*le_extended_scan)(bt_le_service_t service_list[], int entries,
+                                    uint8_t scan_policy, int start);
+    /** rssi monitoring */
+    bt_status_t (*le_lpp_write_rssi_threshold)(const bt_bdaddr_t *remote_bda, char min, char max);
+    bt_status_t (*le_lpp_enable_rssi_monitor)(const bt_bdaddr_t *remote_bda, int enable);
+    bt_status_t (*le_lpp_read_rssi_threshold)(const bt_bdaddr_t *remote_bda);
+
+    /** BT stack Test interface */
+    const void* (*get_testapp_interface)(int test_app_profile);
 } bt_interface_t;
 
 /** TODO: Need to add APIs for Service Discovery, Service authorization and
