@@ -133,6 +133,7 @@ enum {
     GRALLOC_USAGE_PRIVATE_2             = 0x40000000,
     GRALLOC_USAGE_PRIVATE_3             = 0x80000000,
     GRALLOC_USAGE_PRIVATE_MASK          = 0xF0000000,
+    GRALLOC_USAGE_AML_VIDEO_OVERLAY     = GRALLOC_USAGE_PRIVATE_0,
 };
 
 /*****************************************************************************/
