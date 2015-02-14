@@ -147,14 +147,12 @@ typedef struct rga_img_info_t
     unsigned long yrgb_addr;      /* yrgb    mem addr         */
     unsigned long uv_addr;        /* cb/cr   mem addr         */
     unsigned long v_addr;         /* cr      mem addr         */
-    unsigned long format;         //definition by RK_FORMAT
 #else
     unsigned int yrgb_addr;      /* yrgb    mem addr         */
     unsigned int uv_addr;        /* cb/cr   mem addr         */
     unsigned int v_addr;         /* cr      mem addr         */
-    unsigned int format;         //definition by RK_FORMAT
 #endif
-
+    unsigned int format;         //definition by RK_FORMAT
     unsigned short act_w;
     unsigned short act_h;
     unsigned short x_offset;
@@ -474,7 +472,7 @@ RGA_set_src_vir_info(
 		unsigned long   v_addr,          /* v_addr     */
 		unsigned int   vir_w,           /* vir width  */
 		unsigned int   vir_h,           /* vir height */
-		unsigned long  format,          /* format     */
+		unsigned char   format,          /* format     */
 		unsigned char  a_swap_en        /* only for 32bit RGB888 format */
 		);
 #else
@@ -510,7 +508,7 @@ RGA_set_dst_vir_info(
 		unsigned int   vir_w,       /* vir width   */
 		unsigned int   vir_h,       /* vir height  */
 		RECT           *clip,        /* clip window */
-		unsigned long  format,      /* format      */
+		unsigned char  format,      /* format      */
 		unsigned char  a_swap_en
 		);
 #else
