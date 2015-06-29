@@ -15,7 +15,7 @@
  */
 
 #define LOG_TAG "usb_audio_hw"
-/*#define LOG_NDEBUG 0*/
+//#define LOG_NDEBUG 0
 
 #include <errno.h>
 #include <inttypes.h>
@@ -38,6 +38,7 @@
 
 #include <audio_utils/channels.h>
 
+#include "audio_resampler.h"
 /* FOR TESTING:
  * Set k_force_channels to force the number of channels to present to AudioFlinger.
  *   0 disables (this is default: present the device channels to AudioFlinger).
@@ -91,6 +92,10 @@ struct stream_out {
                                          * they could come from here too if
                                          * there was a previous conversion */
     size_t conversion_buffer_size;      /* in bytes */
+
+    struct resample_para resampler;     /*amlogic resampler*/
+    void * resample_buffer;
+    size_t resample_buffer_size;
 };
 
 struct stream_in {
@@ -385,6 +390,34 @@ static int start_output_stream(struct stream_out *out)
     ALOGV("usb:audio_hw::out start_output_stream(card:%d device:%d)",
           out->profile->card, out->profile->device);
 
+    //amlogic start: if audio hardware parameters are not supported, start resample.
+    struct pcm_config proxy_config;
+    memset(&proxy_config, 0, sizeof(proxy_config));
+    proxy_config.channels = DEFAULT_CHANNEL_COUNT;
+    proxy_config.rate = DEFAULT_SAMPLE_RATE;
+    proxy_config.format = DEFAULT_SAMPLE_FORMAT;
+    proxy_prepare(&out->proxy, out->profile, &proxy_config);
+    ALOGI("usb:hardware support: sr = %d, channel = %d",
+            out->proxy.alsa_config.rate, out->proxy.alsa_config.channels);
+
+    memset(&out->resampler, 0, sizeof(out->resampler));
+    if (proxy_config.rate != out->proxy.alsa_config.rate) {
+        ALOGI("init resampler from %d Hz to %d Hz",
+            proxy_config.rate, out->proxy.alsa_config.rate);
+        out->resampler.input_sr = proxy_config.rate;
+        out->resampler.output_sr = out->proxy.alsa_config.rate;
+        out->resampler.input_channels = out->proxy.alsa_config.channels;
+        out->resampler.output_channels = out->proxy.alsa_config.channels;
+        resampler_init(&out->resampler);
+        int framesize = proxy_config.channels*2;
+        int buffersize = (out->proxy.alsa_config.period_size * out->resampler.output_sr / out->resampler.input_sr + 1)*framesize;
+        if (buffersize > out->resample_buffer_size) {
+            out->resample_buffer_size = buffersize;
+            out->resample_buffer = realloc(out->resample_buffer,
+                                             out->resample_buffer_size);
+        }
+    }
+    //amlogic end
     return proxy_open(&out->proxy);
 }
 
@@ -430,6 +463,14 @@ static ssize_t out_write(struct audio_stream_out *stream, const void* buffer, si
     }
 
     if (write_buff != NULL && num_write_buff_bytes != 0) {
+        //amlogic start: resample processing
+        if (out->resampler.input_sr != out->resampler.output_sr) {
+            int frame_size = num_device_channels*2;
+            num_write_buff_bytes = (resample_process(&out->resampler, num_write_buff_bytes/frame_size,
+                        (short *)write_buff, (short *)out->resample_buffer))*frame_size;
+            write_buff = out->resample_buffer;
+        }
+        //amlogic end
         proxy_write(&out->proxy, write_buff, num_write_buff_bytes);
     }
 
@@ -570,6 +611,11 @@ static int adev_open_output_stream(struct audio_hw_device *dev,
     out->conversion_buffer = NULL;
     out->conversion_buffer_size = 0;
 
+    //amlogic start
+    out->resample_buffer = NULL;
+    out->resample_buffer_size = 0;
+    //amlogic end
+
     out->standby = true;
 
     *stream_out = &out->stream;
@@ -592,9 +638,14 @@ static void adev_close_output_stream(struct audio_hw_device *dev,
     out_standby(&stream->common);
 
     free(out->conversion_buffer);
-
     out->conversion_buffer = NULL;
     out->conversion_buffer_size = 0;
+
+    //amlogic start
+    free(out->resample_buffer);
+    out->resample_buffer = NULL;
+    out->resample_buffer_size = 0;
+    //amlogic end
 
     free(stream);
 }

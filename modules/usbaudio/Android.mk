@@ -23,7 +23,8 @@ LOCAL_SRC_FILES := \
 	alsa_device_profile.c \
 	alsa_device_proxy.c \
 	logging.c \
-	format.c
+	format.c \
+	audio_resampler.c
 LOCAL_C_INCLUDES += \
 	external/tinyalsa/include \
 	$(call include-path-for, audio-utils)
