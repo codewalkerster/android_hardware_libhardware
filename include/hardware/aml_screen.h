@@ -69,6 +69,7 @@ typedef struct aml_screen_operations {
     int (*set_format)(struct aml_screen_device*, int, int, int);
     int (*set_rotation)(struct aml_screen_device*, int);
     int (*set_crop)(struct aml_screen_device*, int, int, int, int);
+    int (*set_amlvideo2_crop)(struct aml_screen_device*, int, int, int, int);
     int (*aquire_buffer)(struct aml_screen_device*, aml_screen_buffer_info_t*);
     // int (*set_buffer_refcount)(struct aml_screen_device, int*, int);
     int (*release_buffer)(struct aml_screen_device*, void*);
