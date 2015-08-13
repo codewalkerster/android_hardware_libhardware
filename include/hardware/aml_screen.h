@@ -36,7 +36,7 @@ __BEGIN_DECLS
 /*****************************************************************************/
 
 typedef struct aml_screen_buffer_info {
-    void * buffer_mem;
+    long * buffer_mem;
     int    buffer_canvas;
     long   tv_sec;
     long   tv_usec;
@@ -72,7 +72,7 @@ typedef struct aml_screen_operations {
     int (*set_amlvideo2_crop)(struct aml_screen_device*, int, int, int, int);
     int (*aquire_buffer)(struct aml_screen_device*, aml_screen_buffer_info_t*);
     // int (*set_buffer_refcount)(struct aml_screen_device, int*, int);
-    int (*release_buffer)(struct aml_screen_device*, void*);
+    int (*release_buffer)(struct aml_screen_device*, long*);
     // int (*inc_buffer_refcount)(struct aml_screen_device*, int*);
     int (*set_frame_rate)(struct aml_screen_device*, int);
     int (*set_source_type)(struct aml_screen_device*, SOURCETYPE);
