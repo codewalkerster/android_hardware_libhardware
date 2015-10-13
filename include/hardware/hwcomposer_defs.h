@@ -63,7 +63,14 @@ enum {
      * SurfaceFlinger will only honor this flag when the layer has no blending
      *
      */
-    HWC_HINT_CLEAR_FB       = 0x00000002
+    HWC_HINT_CLEAR_FB       = 0x00000002,
+
+    /*
+     * HWC sets HWC_HINT_OSD_VIDEO_OMX to tell layer to skip this layer for 3d draw.
+     * Added by aml.
+     */
+    HWC_HINT_OSD_VIDEO_OMX  = 0x00000004
+
 };
 
 /*
