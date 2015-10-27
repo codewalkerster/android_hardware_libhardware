@@ -139,9 +139,7 @@ enum {
     GRALLOC_USAGE_ALLOC_MASK            = ~(GRALLOC_USAGE_FOREIGN_BUFFERS),
 
 
-    /* buffer may be used as a cursor */
-    GRALLOC_USAGE_CURSOR                = 0x00008000,
-	 GRALLOC_USAGE_ROT_MASK              = 0x0F000000,
+	GRALLOC_USAGE_ROT_MASK              = 0x0F000000,
 
     /* implementation-specific private usage flags */
     GRALLOC_USAGE_PRIVATE_0             = 0x10000000,

@@ -37,6 +37,8 @@ __BEGIN_DECLS
 
 /*****************************************************************************/
 
+#define HWC_UNREFERENCED_PARAMETER(param) (param) = (param)
+
 typedef struct hwc_layer_1 {
     /*
      * compositionType is used to specify this layer's type and is set by either
