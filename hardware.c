@@ -100,7 +100,8 @@ static int load(const char *id,
         goto done;
     }
 
-    hmi->dso = handle;
+    if (hmi->dso)
+        hmi->dso = handle;
 
     /* success */
     status = 0;
