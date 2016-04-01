@@ -61,6 +61,7 @@ typedef struct tv_input_module {
 } tv_input_module_t;
 
 /*****************************************************************************/
+int mBufferSize;
 
 enum {
     /* Generic hardware. */
@@ -383,7 +384,7 @@ typedef struct tv_input_device {
      * additional requests until it releases a buffer.
      */
     int (*request_capture)(struct tv_input_device* dev, int device_id,
-            int stream_id, buffer_handle_t buffer, uint32_t seq);
+            int stream_id, buffer_handle_t* buffer, uint32_t seq);
 
     /*
      * cancel_capture:
@@ -400,6 +401,10 @@ typedef struct tv_input_device {
     void* reserved[16];
 } tv_input_device_t;
 
+#define SCREENSOURCE_GRALLOC_USAGE  GRALLOC_USAGE_HW_TEXTURE | \
+                                    GRALLOC_USAGE_HW_RENDER | \
+                                    GRALLOC_USAGE_SW_READ_RARELY | \
+                                    GRALLOC_USAGE_SW_WRITE_NEVER
 __END_DECLS
 
 #endif  // ANDROID_TV_INPUT_INTERFACE_H

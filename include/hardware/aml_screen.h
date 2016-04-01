@@ -77,6 +77,9 @@ typedef struct aml_screen_operations {
     int (*set_frame_rate)(struct aml_screen_device*, int);
     int (*set_source_type)(struct aml_screen_device*, SOURCETYPE);
     int (*get_source_type)(struct aml_screen_device*);
+    int (*start_v4l2_device)(struct aml_screen_device*);
+    int (*stop_v4l2_device)(struct aml_screen_device*);
+    int (*set_port_type)(struct aml_screen_device*, int);
 } aml_screen_operations_t;
 
 typedef struct aml_screen_device {
