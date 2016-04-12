@@ -88,7 +88,7 @@ static int tv_input_close_stream(struct tv_input_device*, int, int)
 }
 
 static int tv_input_request_capture(
-        struct tv_input_device*, int, int, buffer_handle_t, uint32_t)
+        struct tv_input_device*, int, int, buffer_handle_t*, uint32_t)
 {
     return -EINVAL;
 }
