@@ -169,6 +169,13 @@ static bool parse_card_device_params(const char *kvpairs, int *card, int *device
     return *card >= 0 && *device >= 0;
 }
 
+char * profile_get_card_device_strs(alsa_device_profile* profile)
+{
+    char buffer[32];
+    sprintf(buffer, "%d;device=%d", profile->card, profile->device);
+    return strdup(buffer);
+}
+
 static char * device_get_parameters(alsa_device_profile * profile, const char * keys)
 {
     if (profile->card < 0 || profile->device < 0) {
@@ -201,6 +208,13 @@ static char * device_get_parameters(alsa_device_profile * profile, const char * 
         str_parms_add_str(result, AUDIO_PARAMETER_STREAM_SUP_FORMATS,
                           format_params);
         free(format_params);
+    }
+
+    /* profile card num & device num */
+    if (str_parms_has_key(query, "card")) {
+        char* address = profile_get_card_device_strs(profile);
+        str_parms_add_str(result, "card", address);
+        free(address);
     }
     str_parms_destroy(query);
 
@@ -327,6 +341,7 @@ static int out_set_parameters(struct audio_stream *stream, const char *kvpairs)
         else {
             int saved_card = out->profile->card;
             int saved_device = out->profile->device;
+#if 0
             out->profile->card = card;
             out->profile->device = device;
             ret_value = profile_read_device_info(out->profile) ? 0 : -EINVAL;
@@ -334,6 +349,7 @@ static int out_set_parameters(struct audio_stream *stream, const char *kvpairs)
                 out->profile->card = saved_card;
                 out->profile->device = saved_device;
             }
+#endif
         }
     }
 
