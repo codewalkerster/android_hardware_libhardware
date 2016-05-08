@@ -58,6 +58,13 @@ enum SOURCETYPE{
     HDMI_IN,
 };
 
+enum aml_screen_mode_e {
+    AML_SCREEN_MODE_RATIO = 0,
+    AML_SCREEN_MODE_FULL,
+    AML_SCREEN_MODE_ADAPTIVE,
+    AML_SCREEN_MODE_MAX
+};
+
 typedef struct aml_screen_operations {
     int (*start)(struct aml_screen_device*);
     int (*stop)(struct aml_screen_device*);
@@ -69,6 +76,7 @@ typedef struct aml_screen_operations {
     int (*set_format)(struct aml_screen_device*, int, int, int);
     int (*set_rotation)(struct aml_screen_device*, int);
     int (*set_crop)(struct aml_screen_device*, int, int, int, int);
+    int (*get_amlvideo2_crop)(struct aml_screen_device*, int *, int *, int *, int *);
     int (*set_amlvideo2_crop)(struct aml_screen_device*, int, int, int, int);
     int (*aquire_buffer)(struct aml_screen_device*, aml_screen_buffer_info_t*);
     // int (*set_buffer_refcount)(struct aml_screen_device, int*, int);
@@ -77,6 +85,8 @@ typedef struct aml_screen_operations {
     int (*set_frame_rate)(struct aml_screen_device*, int);
     int (*set_source_type)(struct aml_screen_device*, SOURCETYPE);
     int (*get_source_type)(struct aml_screen_device*);
+    int (*get_current_sourcesize)(struct aml_screen_device*, int *, int *);
+    int (*set_screen_mode)(struct aml_screen_device*, int);
     int (*start_v4l2_device)(struct aml_screen_device*);
     int (*stop_v4l2_device)(struct aml_screen_device*);
     int (*set_port_type)(struct aml_screen_device*, int);
