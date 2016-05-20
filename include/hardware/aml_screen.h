@@ -95,6 +95,7 @@ typedef struct aml_screen_operations {
 typedef struct aml_screen_device {
     hw_device_t common;
     aml_screen_operations_t ops;
+    int device_id;
     void* priv;
 } aml_screen_device_t;
 
