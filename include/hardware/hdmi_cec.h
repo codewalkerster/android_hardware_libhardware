@@ -214,6 +214,7 @@ enum {
     HDMI_OPTION_SYSTEM_CEC_CONTROL = 3,
 
     /* Option 4 not used */
+    HDMI_OPTION_CEC_AUTO_DEVICE_OFF = 4,
 
     /* Passes the updated language information of Android system.
      * Contains 3-byte ASCII code as defined in ISO/FDIS 639-2. Can be
