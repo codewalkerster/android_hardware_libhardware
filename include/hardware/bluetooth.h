@@ -47,6 +47,9 @@ __BEGIN_DECLS
 #define BT_PROFILE_PAN_ID "pan"
 #define BT_PROFILE_MAP_CLIENT_ID "map_client"
 #define BT_PROFILE_SDP_CLIENT_ID "sdp"
+#ifdef BLUETOOTH_RTK_API
+#define BT_PROFILE_RTKBT_ID "rtkbt"
+#endif
 #define BT_PROFILE_GATT_ID "gatt"
 #define BT_PROFILE_AV_RC_ID "avrcp"
 #define BT_PROFILE_AV_RC_CTRL_ID "avrcp_ctrl"
