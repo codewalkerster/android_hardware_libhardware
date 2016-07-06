@@ -332,8 +332,14 @@ static int read_alsa_device_config(alsa_device_profile * profile, struct pcm_con
     log_pcm_params(alsa_hw_params);
 #endif
 
-    config->channels = pcm_params_get_min(alsa_hw_params, PCM_PARAM_CHANNELS);
-    config->rate = pcm_params_get_min(alsa_hw_params, PCM_PARAM_RATE);
+    //config->channels = pcm_params_get_min(alsa_hw_params, PCM_PARAM_CHANNELS);
+    //config->rate = pcm_params_get_min(alsa_hw_params, PCM_PARAM_RATE);
+
+    //amlogic start: choice the max value that is supported as default config, the audio quality is the best.
+    config->channels = pcm_params_get_max(alsa_hw_params, PCM_PARAM_CHANNELS);
+    config->rate = pcm_params_get_max(alsa_hw_params, PCM_PARAM_RATE);
+    //amlogic end
+
     config->period_size = profile_calc_min_period_size(profile, config->rate);
     config->period_count = pcm_params_get_min(alsa_hw_params, PCM_PARAM_PERIODS);
     config->format = get_pcm_format_for_mask(pcm_params_get_mask(alsa_hw_params, PCM_PARAM_FORMAT));
