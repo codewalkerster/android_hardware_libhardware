@@ -1,4 +1,6 @@
-/*
+/* Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ * Not a Contribution.
+ *
  * Copyright (C) 2012 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -229,6 +231,9 @@ typedef struct {
      */
     bt_status_t (*init)( bthf_callbacks_t* callbacks, int max_hf_clients);
 
+    /** Set the feature bitmask */
+    bt_status_t (*init_features)( int feature_bitmask );
+
     /** connect to headset */
     bt_status_t (*connect)( bt_bdaddr_t *bd_addr );
 
@@ -288,6 +293,9 @@ typedef struct {
     */
     bt_status_t (*phone_state_change) (int num_active, int num_held, bthf_call_state_t call_setup_state,
                                        const char *number, bthf_call_addrtype_t type);
+
+    /** get remote supported features */
+    int (*get_remote_features)(bt_bdaddr_t *bd_addr);
 
     /** Closes the interface. */
     void  (*cleanup)( void );
