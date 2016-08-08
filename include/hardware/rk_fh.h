@@ -1,3 +1,7 @@
+
+#ifndef __RK_FH_H___
+#define __RK_FH_H___
+
 #define RK30_MAX_LCDC_SUPPORT	2
 #define RK30_MAX_LAYER_SUPPORT	5
 #define RK_MAX_FB_SUPPORT       5
@@ -72,4 +76,6 @@ struct rk_fb_win_cfg_data {
 	struct  rk_fb_win_par win_par[RK30_MAX_LAYER_SUPPORT];
 	struct  rk_lcdc_post_cfg post_cfg;
 };
+
+#endif /* __RK_FH_H___ */
 
