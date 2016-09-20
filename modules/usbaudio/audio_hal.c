@@ -37,6 +37,7 @@
 #include <tinyalsa/asoundlib.h>
 
 #include <audio_utils/channels.h>
+#include <audio_utils/resampler.h>
 
 /* FOR TESTING:
  * Set k_force_channels to force the number of channels to present to AudioFlinger.
@@ -126,9 +127,13 @@ struct stream_in {
                                          * there was a previous conversion */
     size_t conversion_buffer_size;      /* in bytes */
 
-    struct resample_para resampler;
-    void * resample_buffer;
-    size_t resample_buffer_size;
+    struct pcm_config config;
+    /* Resampler */
+    struct resampler_itfe *resampler;
+    struct resampler_buffer_provider buf_provider;
+    int16_t *buffer;
+    size_t frames_in;
+    int read_status;
 };
 
 /*
@@ -766,39 +771,128 @@ static int in_set_gain(struct audio_stream_in *stream, float gain)
     return 0;
 }
 
+static int get_next_buffer(struct resampler_buffer_provider *buffer_provider,
+                                    struct resampler_buffer* buffer)
+{
+    struct stream_in *in;
+
+    if (buffer_provider == NULL || buffer == NULL)
+        return -EINVAL;
+
+    in = (struct stream_in *)((char *)buffer_provider -
+                                    offsetof(struct stream_in, buf_provider));
+
+    if (in->proxy.pcm == NULL) {
+        buffer->raw = NULL;
+        buffer->frame_count = 0;
+        in->read_status = -ENODEV;
+        return -ENODEV;
+    }
+
+    if (in->frames_in == 0) {
+        in->read_status = proxy_read(&in->proxy, in->buffer,
+                in->proxy.alsa_config.period_size *
+                audio_stream_frame_size(&in->stream.common));
+        if (in->read_status != 0) {
+            ALOGE("get_next_buffer() proxy_read error %d", in->read_status);
+            buffer->raw = NULL;
+            buffer->frame_count = 0;
+            return in->read_status;
+        }
+        in->frames_in = in->proxy.alsa_config.period_size;
+    }
+
+    buffer->frame_count = (buffer->frame_count > in->frames_in) ?
+                                in->frames_in : buffer->frame_count;
+    buffer->i16 = in->buffer + (in->proxy.alsa_config.period_size - in->frames_in) *
+                                in->proxy.alsa_config.channels;
+
+    return in->read_status;
+}
+
+static void release_buffer(struct resampler_buffer_provider *buffer_provider,
+                                    struct resampler_buffer * buffer)
+{
+    struct stream_in *in;
+
+    if (buffer_provider == NULL || buffer == NULL)
+        return;
+
+    in = (struct stream_in *) ((char *)buffer_provider -
+                                offsetof(struct stream_in, buf_provider));
+
+    in->frames_in -= buffer->frame_count;
+}
+
 /* must be called with hw device and output stream mutexes locked */
 static int start_input_stream(struct stream_in *in)
 {
     ALOGV("ustart_input_stream(card:%d device:%d)", in->profile->card, in->profile->device);
 
-    struct pcm_config proxy_config;
-    memset(&proxy_config, 0, sizeof(proxy_config));
-    proxy_config.channels = DEFAULT_CHANNEL_COUNT;
-    proxy_config.rate = DEFAULT_SAMPLE_RATE;
-    proxy_config.format = DEFAULT_SAMPLE_FORMAT;
-    proxy_prepare(&in->proxy, in->profile, &proxy_config);
+    int ret = 0;
+
     ALOGI("usb:hardware support: sr = %d, channel = %d",
             in->proxy.alsa_config.rate, in->proxy.alsa_config.channels);
 
-    memset(&in->resampler, 0, sizeof(in->resampler));
-    if (proxy_config.rate != in->proxy.alsa_config.rate) {
+    if (in->config.rate != in->proxy.alsa_config.rate) {
         ALOGI("init resampler from %d Hz to %d Hz",
-            proxy_config.rate, in->proxy.alsa_config.rate);
-        in->resampler.input_sr = proxy_config.rate;
-        in->resampler.output_sr = in->proxy.alsa_config.rate;
-        in->resampler.input_channels = in->proxy.alsa_config.channels;
-        in->resampler.output_channels = in->proxy.alsa_config.channels;
-        resampler_init(&in->resampler);
-        int framesize = proxy_config.channels*2;
-        int buffersize = (in->proxy.alsa_config.period_size * in->resampler.output_sr / in->resampler.input_sr + 1)*framesize;
-        if (buffersize > in->resample_buffer_size) {
-            in->resample_buffer_size = buffersize;
-            in->resample_buffer = realloc(in->resample_buffer,
-                                             in->resample_buffer_size);
-        }
+                in->proxy.alsa_config.rate, in->config.rate);
+        in-> buffer = malloc(in->proxy.alsa_config.period_size *
+                            audio_stream_frame_size(&in->stream.common));
+        if (!in->buffer)
+            return -ENOMEM;
+
+        in->buf_provider.get_next_buffer = get_next_buffer;
+        in->buf_provider.release_buffer = release_buffer;
+
+        ret = create_resampler (in->proxy.alsa_config.rate,
+                in->config.rate,
+                in->config.channels,
+                RESAMPLER_QUALITY_DEFAULT,
+                &in->buf_provider,
+                &in->resampler);
+
+        if (ret != 0)
+            return -EINVAL;
     }
 
     return proxy_open(&in->proxy);
+}
+/* read_frames() reads from proxy, down samples to capture rate
+ * if necessary and output the number of frames requested to the buffer specified */
+static ssize_t read_frames(struct stream_in *in, void *buffer, ssize_t frames)
+{
+    ssize_t frames_wr = 0;
+
+    while (frames_wr < frames) {
+        size_t frames_rd = frames - frames_wr;
+        if (in->resampler != NULL) {
+            in->resampler->resample_from_provider (in->resampler,
+                    (int16_t *) ((char *) buffer +  frames_wr *
+                        audio_stream_frame_size(&in->stream.common)),
+                    &frames_rd);
+        } else {
+            struct resampler_buffer buf = {
+                { raw : NULL, },
+                frame_count : frames_rd,
+            };
+            get_next_buffer(&in->buf_provider, &buf);
+            if (buf.raw != NULL) {
+                memcpy((char *)buffer +
+                        frames_wr * audio_stream_frame_size(&in->stream.common),
+                        buf.raw,
+                        buf.frame_count * audio_stream_frame_size(&in->stream.common));
+                frames_rd = buf.frame_count;
+            }
+            release_buffer(&in->buf_provider, &buf);
+        }
+
+        if (in->read_status != 0)
+            return in->read_status;
+
+        frames_wr += frames_rd;
+    }
+    return frames_wr;
 }
 
 /* TODO mutex stuff here (see out_write) */
@@ -810,6 +904,7 @@ static ssize_t in_read(struct audio_stream_in *stream, void* buffer, size_t byte
     int ret = 0;
 
     struct stream_in * in = (struct stream_in *)stream;
+    size_t frames_rq = bytes / audio_stream_frame_size (&in->stream.common);
 
     lock_input_stream(in);
     if (in->standby) {
@@ -847,16 +942,13 @@ static ssize_t in_read(struct audio_stream_in *stream, void* buffer, size_t byte
         read_buff = in->conversion_buffer;
     }
 
-        //amlogic start: resample processing
-        if (in->resampler.input_sr != in->resampler.output_sr) {
-            int frame_size = num_device_channels*2;
-            num_read_buff_bytes = (resample_process(&in->resampler, num_read_buff_bytes/frame_size,
-                        (short *)read_buff, (short *)in->resample_buffer))*frame_size;
-            read_buff = in->resample_buffer;
-        }
-        //amlogic end
+    if (in->config.rate != in->proxy.alsa_config.rate) {
+        ret = read_frames (in, buffer, frames_rq);
+    } else
+        ret = proxy_read(&in->proxy, read_buff, num_read_buff_bytes);
 
-    ret = proxy_read(&in->proxy, read_buff, num_read_buff_bytes);
+    ret = (ret > 0) ? 0 : ret;
+
     if (ret == 0) {
         if (num_device_channels != num_req_channels) {
             // ALOGV("chans dev:%d req:%d", num_device_channels, num_req_channels);
@@ -936,14 +1028,7 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
 
     in->profile = &in->dev->in_profile;
 
-    //amlogic start
-    in->resample_buffer = NULL;
-    in->resample_buffer_size = 0;
-    //amlogic end
-
-
-    struct pcm_config proxy_config;
-    memset(&proxy_config, 0, sizeof(proxy_config));
+    memset(&in->config, 0, sizeof(struct pcm_config));
 
     /* Pull out the card/device pair */
     parse_card_device_params(address, &(in->profile->card), &(in->profile->device));
@@ -953,25 +1038,25 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
 
     /* Rate */
     if (config->sample_rate == 0) {
-        proxy_config.rate = config->sample_rate = profile_get_default_sample_rate(in->profile);
+        in->config.rate = config->sample_rate = profile_get_default_sample_rate(in->profile);
     } else if (profile_is_sample_rate_valid(in->profile, config->sample_rate)) {
-        proxy_config.rate = config->sample_rate;
+        in->config.rate = config->sample_rate;
     } else {
-        proxy_config.rate = config->sample_rate = profile_get_default_sample_rate(in->profile);
+        in->config.rate = config->sample_rate = profile_get_default_sample_rate(in->profile);
         ret = -EINVAL;
     }
 
     /* Format */
     if (config->format == AUDIO_FORMAT_DEFAULT) {
-        proxy_config.format = profile_get_default_format(in->profile);
-        config->format = audio_format_from_pcm_format(proxy_config.format);
+        in->config.format = profile_get_default_format(in->profile);
+        config->format = audio_format_from_pcm_format(in->config.format);
     } else {
         enum pcm_format fmt = pcm_format_from_audio_format(config->format);
         if (profile_is_format_valid(in->profile, fmt)) {
-            proxy_config.format = fmt;
+            in->config.format = fmt;
         } else {
-            proxy_config.format = profile_get_default_format(in->profile);
-            config->format = audio_format_from_pcm_format(proxy_config.format);
+            in->config.format = profile_get_default_format(in->profile);
+            config->format = audio_format_from_pcm_format(in->config.format);
             ret = -EINVAL;
         }
     }
@@ -995,8 +1080,8 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
     /* we can expose any channel mask, and emulate internally based on channel count. */
     in->hal_channel_mask = config->channel_mask;
 
-    proxy_config.channels = profile_get_default_channel_count(in->profile);
-    proxy_prepare(&in->proxy, in->profile, &proxy_config);
+    in->config.channels = profile_get_default_channel_count(in->profile);
+    proxy_prepare(&in->proxy, in->profile, &in->config);
 
     in->standby = true;
 
@@ -1011,6 +1096,12 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
 static void adev_close_input_stream(struct audio_hw_device *dev, struct audio_stream_in *stream)
 {
     struct stream_in *in = (struct stream_in *)stream;
+
+    if (in->resampler)
+        release_resampler (in->resampler);
+
+    if (in->buffer)
+        free(in->buffer);
 
     /* Close the pcm device */
     in_standby(&stream->common);
