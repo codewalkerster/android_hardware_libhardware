@@ -139,7 +139,10 @@ enum {
     GRALLOC_USAGE_ALLOC_MASK            = ~(GRALLOC_USAGE_FOREIGN_BUFFERS),
 
 
-	GRALLOC_USAGE_ROT_MASK              = 0x0F000000,
+	GRALLOC_USAGE_ROT_MASK              = 0x0F000000,   // .KP : 目前实际上不用了, 但代码上有依赖.
+    GRALLOC_USAGE_TO_USE_SINGLE_BUFFER  = 0x08000000,
+    /* would like to use a fbdc(afbc) format. */
+    GRALLOC_USAGE_TO_USE_FBDC_FMT       = 0x04000000,
 
     /* implementation-specific private usage flags */
     GRALLOC_USAGE_PRIVATE_0             = 0x10000000,
