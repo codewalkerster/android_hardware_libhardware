@@ -139,7 +139,13 @@ enum {
     GRALLOC_USAGE_ALLOC_MASK            = ~(GRALLOC_USAGE_FOREIGN_BUFFERS),
 
 
-	GRALLOC_USAGE_ROT_MASK              = 0x0F000000,   // .KP : 目前实际上不用了, 但代码上有依赖.
+    GRALLOC_USAGE_ROT_MASK              = 0x0F000000,   // .KP : 目前实际上不用了, 但代码上有依赖.
+
+    /**
+     * mask for rk_nv12_10_color_space_field.
+     */
+    GRALLOC_USAGE_RK_COLOR_SPACES_MASK  = 0x0F000000,
+
     GRALLOC_USAGE_TO_USE_SINGLE_BUFFER  = 0x08000000,
     /* would like to use a fbdc(afbc) format. */
     GRALLOC_USAGE_TO_USE_FBDC_FMT       = 0x04000000,
@@ -152,6 +158,26 @@ enum {
     GRALLOC_USAGE_PRIVATE_MASK          = 0xF0000000,
 };
 
+typedef int rk_nv12_10_color_space_t;
+#define RK_NV12_10_BT709                ( (rk_nv12_10_color_space_t)(0) )
+#define RK_NV12_10_COLOR_SPACE_DEFAULT  RK_NV12_10_BT709
+#define RK_NV12_10_BT2020               ( (rk_nv12_10_color_space_t)(1) )
+#define RK_NV12_10_HDR_10               ( (rk_nv12_10_color_space_t)(2) )
+#define RK_NV12_10_HDR_HLG              ( (rk_nv12_10_color_space_t)(3) )
+#define RK_NV12_10_HDR_DOLBY            ( (rk_nv12_10_color_space_t)(4) )
+
+inline rk_nv12_10_color_space_t get_rk_color_space_from_usage(int usage)
+{
+    return (usage & GRALLOC_USAGE_RK_COLOR_SPACES_MASK) >> 24;
+}
+
+inline void set_rk_color_space_into_usage(rk_nv12_10_color_space_t color_space,
+                                          int* usage)
+{
+    int usage_input = *usage;
+
+    *usage = (color_space << 24) | ( usage_input & ~GRALLOC_USAGE_RK_COLOR_SPACES_MASK);
+}
 /*****************************************************************************/
 
 /**

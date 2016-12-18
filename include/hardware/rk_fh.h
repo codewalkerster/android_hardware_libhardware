@@ -55,7 +55,7 @@ struct rk_fb_area_par {
 	u8  fbdc_en;
 	u8  fbdc_cor_en;
 	u8  fbdc_data_format;
-	u16 reserved0;
+	u16 data_space;
 	u32 reserved1;
 };
 
