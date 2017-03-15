@@ -63,7 +63,6 @@ __BEGIN_DECLS
 /**
  * Name of the graphics device to open
  */
-
 #define GRALLOC_HARDWARE_GPU0 "gpu0"
 
 enum {
@@ -156,6 +155,58 @@ enum {
     GRALLOC_USAGE_PRIVATE_2             = 0x40000000,
     GRALLOC_USAGE_PRIVATE_3             = 0x80000000,
     GRALLOC_USAGE_PRIVATE_MASK          = 0xF0000000,
+};
+
+/**
+ * perform operation commands for rk gralloc.
+ * Helpers for using the non-type-safe perform() extension functions. Use
+ * these helpers instead of calling perform() directly in your application.
+ */
+enum {
+  /****************Implement****************/
+  GRALLOC_MODULE_PERFORM_GET_HADNLE_PRIME_FD       = 0x08100002,
+  GRALLOC_MODULE_PERFORM_GET_HADNLE_ATTRIBUTES     = 0x08100004,
+  GRALLOC_MODULE_PERFORM_GET_INTERNAL_FORMAT       = 0x08100006,
+  GRALLOC_MODULE_PERFORM_GET_HADNLE_WIDTH          = 0x08100008,
+  GRALLOC_MODULE_PERFORM_GET_HADNLE_HEIGHT         = 0x0810000A,
+  GRALLOC_MODULE_PERFORM_GET_HADNLE_STRIDE         = 0x0810000C,
+  GRALLOC_MODULE_PERFORM_GET_HADNLE_BYTE_STRIDE    = 0x0810000E,
+  GRALLOC_MODULE_PERFORM_GET_HADNLE_FORMAT         = 0x08100010,
+  GRALLOC_MODULE_PERFORM_GET_HADNLE_SIZE           = 0x08100012,
+
+  /* perform(const struct gralloc_module_t *mod,
+   *     int op,
+   *     buffer_handle_t buffer,
+   *     int *usage);
+   */
+  GRALLOC_MODULE_PERFORM_GET_USAGE = 0x0feeff03,
+
+
+  /****************Not Implement****************/
+  GRALLOC_MODULE_PERFORM_GET_DRM_FD                = 0x08000002,
+  /* perform(const struct gralloc_module_t *mod,
+   *	   int op,
+   *	   int drm_fd,
+   *	   buffer_handle_t buffer,
+   *	   struct hwc_drm_bo *bo);
+   */
+  GRALLOC_MODULE_PERFORM_DRM_IMPORT = 0xffeeff00,
+
+  /* perform(const struct gralloc_module_t *mod,
+   *	   int op,
+   *	   buffer_handle_t buffer,
+   *	   void (*free_callback)(void *),
+   *	   void *priv);
+   */
+  GRALLOC_MODULE_PERFORM_SET_IMPORTER_PRIVATE = 0xffeeff01,
+
+  /* perform(const struct gralloc_module_t *mod,
+   *	   int op,
+   *	   buffer_handle_t buffer,
+   *	   void (*free_callback)(void *),
+   *	   void **priv);
+   */
+  GRALLOC_MODULE_PERFORM_GET_IMPORTER_PRIVATE = 0xffeeff02,
 };
 
 typedef int rk_nv12_10_color_space_t;
