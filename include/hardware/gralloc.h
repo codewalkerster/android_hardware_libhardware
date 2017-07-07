@@ -141,6 +141,10 @@ enum {
     /* buffer may be used as a cursor */
     GRALLOC_USAGE_ROT_MASK              = 0x0F000000,
 
+    GRALLOC_USAGE_TO_USE_SINGLE_BUFFER  = 0x08000000,
+    /* would like to use a fbdc(afbc) format. */
+    GRALLOC_USAGE_TO_USE_FBDC_FMT       = 0x04000000,
+
     /* implementation-specific private usage flags */
     GRALLOC_USAGE_PRIVATE_0             = 0x10000000U,
     GRALLOC_USAGE_PRIVATE_1             = 0x20000000U,
