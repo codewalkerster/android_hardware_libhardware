@@ -146,8 +146,13 @@ enum {
     GRALLOC_USAGE_RK_COLOR_SPACES_MASK  = 0x0F000000,
 
     GRALLOC_USAGE_TO_USE_SINGLE_BUFFER  = 0x08000000,
+
+    /* mali p010 format */
+    GRALLOC_USAGE_TO_USE_ARM_P010       = 0x04000000,
     /* would like to use a fbdc(afbc) format. */
-    GRALLOC_USAGE_TO_USE_FBDC_FMT       = 0x04000000,
+    GRALLOC_USAGE_TO_USE_FBDC_FMT       = 0x02000000,
+    /* use Physically Continuous memory */
+    GRALLOC_USAGE_TO_USE_PHY_CONT	= 0x01000000,
 
     /* implementation-specific private usage flags */
     GRALLOC_USAGE_PRIVATE_0             = 0x10000000,
@@ -164,6 +169,7 @@ enum {
  */
 enum {
   /****************Implement****************/
+  GRALLOC_MODULE_PERFORM_GET_HADNLE_PHY_ADDR       = 0x08100001,
   GRALLOC_MODULE_PERFORM_GET_HADNLE_PRIME_FD       = 0x08100002,
   GRALLOC_MODULE_PERFORM_GET_HADNLE_ATTRIBUTES     = 0x08100004,
   GRALLOC_MODULE_PERFORM_GET_INTERNAL_FORMAT       = 0x08100006,
