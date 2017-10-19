@@ -176,6 +176,9 @@ enum {
   GRALLOC_MODULE_PERFORM_GET_HADNLE_FORMAT         = 0x08100010,
   GRALLOC_MODULE_PERFORM_GET_HADNLE_SIZE           = 0x08100012,
 
+  GRALLOC_MODULE_PERFORM_GET_RK_ASHMEM             = 0x08100014,
+  GRALLOC_MODULE_PERFORM_SET_RK_ASHMEM             = 0x08100016,
+
   /* perform(const struct gralloc_module_t *mod,
    *     int op,
    *     buffer_handle_t buffer,
@@ -210,6 +213,14 @@ enum {
    */
   GRALLOC_MODULE_PERFORM_GET_IMPORTER_PRIVATE = 0xffeeff02,
 };
+
+#define maxLayerNameLength		100
+typedef struct rk_ashmem_t
+{
+    int32_t alreadyStereo;
+    int32_t displayStereo;
+    char LayerName[maxLayerNameLength + 1];
+} rk_ashmem_t;
 
 /*****************************************************************************/
 
