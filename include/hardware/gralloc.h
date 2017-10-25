@@ -214,6 +214,28 @@ enum {
   GRALLOC_MODULE_PERFORM_GET_IMPORTER_PRIVATE = 0xffeeff02,
 };
 
+//eotf type
+enum supported_eotf_type {
+        TRADITIONAL_GAMMA_SDR = 0,
+        TRADITIONAL_GAMMA_HDR,
+        SMPTE_ST2084,  /* HDR10*/
+        FUTURE_EOTF
+};
+
+struct hdr_static_metadata {
+       uint16_t eotf;
+       uint16_t type;
+       uint16_t display_primaries_x[3];
+       uint16_t display_primaries_y[3];
+       uint16_t white_point_x;
+       uint16_t white_point_y;
+       uint16_t max_mastering_display_luminance;
+       uint16_t min_mastering_display_luminance;
+       uint16_t max_fall;
+       uint16_t max_cll;
+       uint16_t min_cll;
+};
+
 #define maxLayerNameLength		100
 typedef struct rk_ashmem_t
 {
