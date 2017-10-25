@@ -222,6 +222,12 @@ enum supported_eotf_type {
         FUTURE_EOTF
 };
 
+//hdmi_output_colorimetry type
+enum supported_hdmi_colorimetry {
+	COLOR_METRY_NONE=0,
+	COLOR_METRY_ITU_2020=9
+};
+
 struct hdr_static_metadata {
        uint16_t eotf;
        uint16_t type;
