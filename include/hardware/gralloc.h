@@ -141,14 +141,14 @@ enum {
     /* buffer may be used as a cursor */
     GRALLOC_USAGE_ROT_MASK              = 0x0F000000,
 
-    GRALLOC_USAGE_TO_USE_SINGLE_BUFFER  = 0x08000000,
+    GRALLOC_USAGE_TO_USE_SINGLE_BUFFER  = 0x0B000000,
 
     /* mali p010 format */
-    GRALLOC_USAGE_TO_USE_ARM_P010       = 0x04000000,
+    GRALLOC_USAGE_TO_USE_ARM_P010       = 0x0A000000,
     /* would like to use a fbdc(afbc) format. */
-    GRALLOC_USAGE_TO_USE_FBDC_FMT       = 0x02000000,
+    GRALLOC_USAGE_TO_USE_FBDC_FMT       = 0x09000000,
     /* use Physically Continuous memory */
-    GRALLOC_USAGE_TO_USE_PHY_CONT	= 0x01000000,
+    GRALLOC_USAGE_TO_USE_PHY_CONT	= 0x08000000,
 
     /* implementation-specific private usage flags */
     GRALLOC_USAGE_PRIVATE_0             = 0x10000000U,
