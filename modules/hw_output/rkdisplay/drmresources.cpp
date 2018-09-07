@@ -53,8 +53,8 @@ void DrmResources::ConfigurePossibleDisplays()
   int default_display_possible = 0;
   std::string conn_name;
 
-  primary_length = property_get("sys.hwc.device.primary", primary_name, NULL);
-  extend_length = property_get("sys.hwc.device.extend", extend_name, NULL);
+  primary_length = property_get("vendor.hwc.device.primary", primary_name, NULL);
+  extend_length = property_get("vendor.hwc.device.extend", extend_name, NULL);
 
   if (!primary_length)
     default_display_possible |= HWC_DISPLAY_PRIMARY_BIT;
@@ -95,7 +95,7 @@ void DrmResources::ConfigurePossibleDisplays()
 }
 int DrmResources::Init() {
   char path[PROPERTY_VALUE_MAX];
-  property_get("hwc.drm.device", path, "/dev/dri/card0");
+  property_get("vendor.hwc.drm.device", path, "/dev/dri/card0");
 
   /* TODO: Use drmOpenControl here instead */
   fd_.Set(open(path, O_RDWR));

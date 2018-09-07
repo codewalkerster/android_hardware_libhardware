@@ -284,7 +284,7 @@ static void updateConnectors(hw_output_private_t *priv){
         }
         ALOGD("crtc: %d %d foundHdmi %d 2222", crtcId1, crtcId2, foundHdmi);
         char property[PROPERTY_VALUE_MAX];
-        property_get("sys.hwc.device.primary", property, "null");
+        property_get("vendor.hwc.device.primary", property, "null");
         if (crtcId1 == crtcId2 && foundHdmi && strstr(property, "HDMI-A") == NULL) {
             for (auto &conn : priv->drm_->connectors()) {
                 if (builtInHdmi(conn->get_type()) && conn->state() == DRM_MODE_CONNECTED) {
