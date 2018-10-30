@@ -911,14 +911,13 @@ static int hw_output_set_brightness(struct hw_output_device*, int dpy, int brigh
     }
 
     if (atoi(property) != brightness) {
-        timeline++;
-        memset(tmp, 0, sizeof(tmp));
-        sprintf(tmp, "%d", timeline);
-
         if (dpy == HWC_DISPLAY_PRIMARY)
             property_set("persist.vendor.brightness.main", tmp);
         else
             property_set("persist.vendor.brightness.aux", tmp);
+        timeline++;
+        memset(tmp, 0, sizeof(tmp));
+        sprintf(tmp, "%d", timeline);
         property_set("vendor.display.timeline", tmp);
     }
     return 0;
@@ -937,13 +936,13 @@ static int hw_output_set_contrast(struct hw_output_device*, int dpy, int contras
     }
 
     if (atoi(property) != contrast) {
-        timeline++;
-        memset(tmp, 0, sizeof(tmp));
-        sprintf(tmp, "%d", timeline);
         if (dpy == HWC_DISPLAY_PRIMARY)
             property_set("persist.vendor.contrast.main", tmp);
         else
             property_set("persist.vendor.contrast.aux", tmp);
+        timeline++;
+        memset(tmp, 0, sizeof(tmp));
+        sprintf(tmp, "%d", timeline);
         property_set("vendor.display.timeline", tmp);
     }
     return 0;
@@ -962,13 +961,13 @@ static int hw_output_set_sat(struct hw_output_device*, int dpy, int sat)
     }
 
     if (atoi(property) != sat) {
-        timeline++;
-        memset(tmp, 0, sizeof(tmp));
-        sprintf(tmp, "%d", timeline);
         if (dpy == HWC_DISPLAY_PRIMARY)
             property_set("persist.vendor.saturation.main", tmp);
         else
             property_set("persist.vendor.saturation.aux", tmp);
+        timeline++;
+        memset(tmp, 0, sizeof(tmp));
+        sprintf(tmp, "%d", timeline);
         property_set("vendor.display.timeline", tmp);
     }
     return 0;
@@ -987,13 +986,13 @@ static int hw_output_set_hue(struct hw_output_device*, int dpy, int hue)
     }
 
     if (atoi(property) != hue) {
-        timeline++;
-        memset(tmp, 0, sizeof(tmp));
-        sprintf(tmp, "%d", timeline);
         if (dpy == HWC_DISPLAY_PRIMARY)
             property_set("persist.vendor.hue.main", tmp);
         else
             property_set("persist.vendor.hue.aux", tmp);
+        timeline++;
+        memset(tmp, 0, sizeof(tmp));
+        sprintf(tmp, "%d", timeline);
         property_set("vendor.display.timeline", tmp);
     }
     return 0;
