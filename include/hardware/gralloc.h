@@ -218,7 +218,8 @@ enum {
 enum supported_eotf_type {
         TRADITIONAL_GAMMA_SDR = 0,
         TRADITIONAL_GAMMA_HDR,
-        SMPTE_ST2084,  /* HDR10*/
+        SMPTE_ST2084,  /* HDR10 */
+        HLG,           /* HLG */
         FUTURE_EOTF
 };
 
