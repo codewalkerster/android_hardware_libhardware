@@ -882,6 +882,23 @@ static int hw_output_set_mode(struct hw_output_device*, int dpy, const char* mod
     return 0;
 }
 
+static int hw_output_set_3d_mode(struct hw_output_device*, const char* mode)
+{
+    char property[PROPERTY_VALUE_MAX];
+    property_get("vendor.3d_resolution.main", property, "null");
+    if (strcmp(mode, property) !=0) {
+        char tmp[128];
+
+        timeline++;
+        snprintf(tmp,128, "%d", timeline);
+
+        ALOGV("%s: setprop vendor.3d_resolution.main %s",__FUNCTION__,mode);
+        property_set("vendor.3d_resolution.main", mode);
+        property_set("vendor.display.timeline", tmp);
+    }
+    return 0;
+}
+
 static int hw_output_set_gamma(struct hw_output_device* dev, int dpy, uint32_t size, uint16_t* r, uint16_t* g, uint16_t* b)
 {
     hw_output_private_t* priv = (hw_output_private_t*)dev;
@@ -1381,6 +1398,7 @@ static drm_mode_t* hw_output_get_display_modes(struct hw_output_device* dev, int
 static int hw_output_device_close(struct hw_device_t *dev)
 {
     hw_output_private_t* priv = (hw_output_private_t*)dev;
+
     if (priv) {
         free(priv);
     }
@@ -1405,6 +1423,7 @@ static int hw_output_device_open(const struct hw_module_t* module,
 
         dev->device.initialize = hw_output_initialize;
         dev->device.setMode = hw_output_set_mode;
+        dev->device.set3DMode = hw_output_set_3d_mode;
         dev->device.setBrightness = hw_output_set_brightness;
         dev->device.setContrast = hw_output_set_contrast;
         dev->device.setSat = hw_output_set_sat;
