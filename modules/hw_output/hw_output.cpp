@@ -873,7 +873,7 @@ static int hw_output_set_mode(struct hw_output_device*, int dpy, const char* mod
         else 
             property_set("persist.vendor.resolution.aux", mode);
 
-        int timeline = property_get_int32("vendor.display.timeline", -1);
+        int timeline = property_get_int32("vendor.display.timeline", 1);
         timeline++;
         char tmp[128];
         snprintf(tmp,128,"%d",timeline);
@@ -889,7 +889,7 @@ static int hw_output_set_3d_mode(struct hw_output_device*, const char* mode)
     if (strcmp(mode, property) !=0) {
         property_set("vendor.3d_resolution.main", mode);
 
-        int timeline = property_get_int32("vendor.display.timeline", -1);
+        int timeline = property_get_int32("vendor.display.timeline", 1);
         timeline++;
         char tmp[128];
         snprintf(tmp,128,"%d",timeline);
@@ -933,7 +933,7 @@ static int hw_output_set_brightness(struct hw_output_device*, int dpy, int brigh
         else
             property_set("persist.vendor.brightness.aux", tmp);
 
-        int timeline = property_get_int32("vendor.display.timeline", -1);
+        int timeline = property_get_int32("vendor.display.timeline", 1);
         timeline++;
         snprintf(tmp,128,"%d",timeline);
         property_set("vendor.display.timeline", tmp);
@@ -959,7 +959,7 @@ static int hw_output_set_contrast(struct hw_output_device*, int dpy, int contras
         else
             property_set("persist.vendor.contrast.aux", tmp);
 
-        int timeline = property_get_int32("vendor.display.timeline", -1);
+        int timeline = property_get_int32("vendor.display.timeline", 1);
         timeline++;
         snprintf(tmp,128,"%d",timeline);
         property_set("vendor.display.timeline", tmp);
@@ -985,7 +985,7 @@ static int hw_output_set_sat(struct hw_output_device*, int dpy, int sat)
         else
             property_set("persist.vendor.saturation.aux", tmp);
 
-        int timeline = property_get_int32("vendor.display.timeline", -1);
+        int timeline = property_get_int32("vendor.display.timeline", 1);
         timeline++;
         snprintf(tmp,128,"%d",timeline);
         property_set("vendor.display.timeline", tmp);
@@ -1011,7 +1011,7 @@ static int hw_output_set_hue(struct hw_output_device*, int dpy, int hue)
         else
             property_set("persist.vendor.hue.aux", tmp);
 
-        int timeline = property_get_int32("vendor.display.timeline", -1);
+        int timeline = property_get_int32("vendor.display.timeline", 1);
         timeline++;
         snprintf(tmp,128,"%d",timeline);
         property_set("vendor.display.timeline", tmp);
@@ -1050,7 +1050,7 @@ static int hw_output_set_screen_scale(struct hw_output_device*, int dpy, int dir
         else
             property_set("persist.vendor.overscan.aux", overscan);
 
-        int timeline = property_get_int32("vendor.display.timeline", -1);
+        int timeline = property_get_int32("vendor.display.timeline", 1);
         timeline++;
         snprintf(tmp,128,"%d",timeline);
         property_set("vendor.display.timeline", tmp);
@@ -1077,7 +1077,7 @@ static int hw_output_set_hdr_mode(struct hw_output_device*, int dpy, int hdr_mod
         else
             property_set("persist.vendor.hdr_mode.aux", tmp);
 
-        int timeline = property_get_int32("vendor.display.timeline", -1);
+        int timeline = property_get_int32("vendor.display.timeline", 1);
         timeline++;
         snprintf(tmp,128,"%d",timeline);
         property_set("vendor.display.timeline", tmp);
@@ -1102,7 +1102,7 @@ static int hw_output_set_color_mode(struct hw_output_device*, int dpy, const cha
         else
             property_set("persist.vendor.color.aux", color_mode);
 
-        int timeline = property_get_int32("vendor.display.timeline", -1);
+        int timeline = property_get_int32("vendor.display.timeline", 1);
         timeline++;
         char tmp[128];
         snprintf(tmp,128,"%d",timeline);
@@ -1201,7 +1201,6 @@ static int hw_output_get_color_configs(struct hw_output_device* dev, int dpy, in
     DrmConnector* mCurConnector;
     uint64_t color_capacity=0;
     uint64_t depth_capacity=0;
-
 
     if (dpy == HWC_DISPLAY_PRIMARY) {
         mCurConnector = priv->primary;
