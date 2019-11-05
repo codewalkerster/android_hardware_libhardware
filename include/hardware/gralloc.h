@@ -446,7 +446,7 @@ typedef struct gralloc_module_t {
      */
     int32_t (*validateBufferSize)(
             struct gralloc_module_t const* device, buffer_handle_t handle,
-            uint32_t w, uint32_t h, int32_t format, int usage,
+            uint32_t w, uint32_t h, int32_t format, int usage, int layer_count,
             uint32_t stride);
 
     /* reserved for future use */
