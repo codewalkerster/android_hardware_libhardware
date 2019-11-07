@@ -28,7 +28,7 @@
 #define ODROID_THINGS_MODULE_API_VERSION_1_0 HARDWARE_MODULE_API_VERSION(1, 0)
 #define ODROID_THINGS_HARDWARE_MODULE_ID    "odroidThings"
 
-#define PIN_MAX 40
+#define PIN_MAX 41
 
 namespace hardware {
 namespace hardkernel {
