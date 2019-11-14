@@ -34,6 +34,7 @@
 
 //you can define it in external/libdrm/include/drm/drm.h
 #define DRM_CLIENT_CAP_SHARE_PLANES     4
+#define DRM_CLIENT_CAP_ASPECT_RADIO     4
 
 namespace android {
 
@@ -131,6 +132,11 @@ int DrmResources::Init() {
     return ret;
   }
 #endif
+  ret = drmSetClientCap(fd(), DRM_CLIENT_CAP_ASPECT_RADIO, 0);
+  if (ret) {
+    ALOGE("Failed to disable aspect radio %d", ret);
+    return ret;
+  }
 
   drmModeResPtr res = drmModeGetResources(fd());
   if (!res) {
