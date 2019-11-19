@@ -29,6 +29,7 @@
 #define ODROID_THINGS_HARDWARE_MODULE_ID    "odroidThings"
 
 #define PIN_MAX 41
+#define I2C_MAX 2
 
 namespace hardware {
 namespace hardkernel {
@@ -39,6 +40,11 @@ typedef struct pin{
     int pin;
     int availableModes;
 } pin_t;
+
+typedef struct i2c{
+    std::string name;
+    std::string path;
+} i2c_t;
 
 typedef void (*function_t)(void);
 
@@ -65,6 +71,13 @@ typedef struct pwm_operations {
     bool (*setFrequency)(int, double);
 } pwm_operations_t;
 
+typedef struct i2c_operations {
+    void (*open)(int, uint32_t, int);
+    void (*close)(int);
+    const std::vector<uint8_t> (*readRegBuffer)(int, uint32_t, int);
+    Result (*writeRegBuffer)(int, uint32_t, std::vector<uint8_t>, int);
+} i2c_operations_t;
+
 typedef struct spi_operations {
 } spi_operations_t;
 
@@ -73,6 +86,7 @@ typedef struct things_device {
     common_operations_t common_ops;
     gpio_operations_t gpio_ops;
     pwm_operations_t pwm_ops;
+    i2c_operations_t i2c_ops;
     //spi_operations_t spi_ops;
 } things_device_t;
 

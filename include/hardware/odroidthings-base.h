@@ -21,16 +21,16 @@ typedef enum {
     PIN_GPIO = 4, // (1 << 2)
     PIN_AIN = 8, // (1 << 3)
     PIN_PWM = 16, // (1 << 4)
-    PIN_I2C_SDA = 32, // (1 << 5)
-    PIN_I2C_SCL = 64, // (1 << 6)
-    PIN_SPI_SCLK = 128, // (1 << 7)
-    PIN_SPI_MOSI = 256, // (1 << 8)
-    PIN_SPI_MISO = 512, // (1 << 9)
-    PIN_SPI_CE0 = 1024, // (1 << 10)
-    PIN_UART_RX = 2048, // (1 << 11)
-    PIN_UART_TX = 4096, // (1 << 12)
-    PIN_ETC = 8192, // (1 << 13)
+    PIN_I2C = 32, // (1 << 5)
+    PIN_SPI = 64, // (1 << 6)
+    PIN_UART = 128, // (1 << 7)
+    PIN_ETC = 256, // (1 << 8)
 } pin_mode;
+
+typedef enum {
+    OK = 0,
+    FAILED = 1, // (::vendor::hardkernel::hardware::odroidthings::V1_0::Result.OK implicitly + 1)
+} Result;
 
 #ifdef __cplusplus
 }
