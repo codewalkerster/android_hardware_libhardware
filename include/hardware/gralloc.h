@@ -231,7 +231,7 @@ enum supported_hdmi_colorimetry {
 	COLOR_METRY_ITU_2020=9
 };
 
-struct hdr_static_metadata_1 {
+struct hdr_static_metadata {
        uint16_t eotf;
        uint16_t type;
        uint16_t display_primaries_x[3];
@@ -261,7 +261,7 @@ struct hdr_metadata_infoframe {
       __u16 max_fall;
 };
 
-struct hdr_static_metadata_2 {
+struct hdr_output_metadata {
     __u32 metadata_type;
     union {
         struct hdr_metadata_infoframe hdmi_metadata_type;
