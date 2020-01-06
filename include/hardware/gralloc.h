@@ -151,6 +151,9 @@ enum {
     GRALLOC_USAGE_TO_USE_FBDC_FMT       = 0x09000000,
     /* use Physically Continuous memory */
     GRALLOC_USAGE_TO_USE_PHY_CONT	= 0x08000000,
+    /* replacement of GRALLOC_USAGE_EXTERNAL_DISP,
+     * which is treated as invalid by frameworks. */
+    GRALLOC_USAGE__RK_EXT__EXTERNAL_DISP= 0x07000000U,
 
     /* implementation-specific private usage flags */
     GRALLOC_USAGE_PRIVATE_0             = 0x10000000U,
