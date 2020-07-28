@@ -33,6 +33,7 @@
 #define I2C_MAX 2
 #define PWM_MAX 4
 #define UART_MAX 1
+#define SPI_MAX 1
 
 namespace hardware {
 namespace hardkernel {
@@ -59,6 +60,11 @@ typedef struct uart{
     std::string name;
     std::string path;
 } uart_t;
+
+typedef struct spi {
+    std::string name;
+    std::string path;
+} spi_t;
 
 typedef void (*function_t)(void);
 
@@ -114,6 +120,18 @@ typedef struct uart_operations {
 } uart_operations_t;
 
 typedef struct spi_operations {
+    void (*open)(int);
+    void (*close)(int);
+    bool (*setBitJustification)(int, uint8_t);
+    bool (*setBitsPerWord)(int, uint8_t);
+    bool (*setMode)(int, uint8_t);
+    bool (*setCsChange)(int, bool);
+    bool (*setDelay)(int, uint16_t);
+    bool (*setFrequency)(int, uint32_t);
+
+    const std::vector<uint8_t> (*transfer)(int, std::vector<uint8_t>, int);
+    bool (*write)(int, std::vector<uint8_t>, int);
+    const std::vector<uint8_t> (*read)(int, int);
 } spi_operations_t;
 
 typedef struct things_device {
@@ -123,7 +141,7 @@ typedef struct things_device {
     pwm_operations_t pwm_ops;
     i2c_operations_t i2c_ops;
     uart_operations_t uart_ops;
-    //spi_operations_t spi_ops;
+    spi_operations_t spi_ops;
 } things_device_t;
 
 typedef struct things_module {
