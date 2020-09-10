@@ -230,6 +230,10 @@ typedef enum {
     HAL_PIXEL_FORMAT_YCrCb_NV12_10      = 0x17, // YUY2_1obit
     HAL_PIXEL_FORMAT_YCbCr_422_SP_10    = 0x18, //
     HAL_PIXEL_FORMAT_YCrCb_420_SP_10    = 0x19, //
+    HAL_PIXEL_FORMAT_BPP_1              = 0x30,
+    HAL_PIXEL_FORMAT_BPP_2              = 0x31,
+    HAL_PIXEL_FORMAT_BPP_4              = 0x32,
+    HAL_PIXEL_FORMAT_BPP_8              = 0x33,
 }rk_pixel_format_t;
 
 #ifdef __cplusplus
