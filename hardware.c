@@ -15,6 +15,7 @@
  */
 
 #include <hardware/hardware.h>
+#include <hardware/gralloc.h>
 
 #include <cutils/properties.h>
 
@@ -247,7 +248,26 @@ found:
     return load(class_id, path, module);
 }
 
+const static hw_module_t* s_gralloc_module = NULL;
 int hw_get_module(const char *id, const struct hw_module_t **module)
 {
-    return hw_get_module_by_class(id, NULL, module);
+    int ret = 0;
+
+    if ( 0 == strcmp(id, GRALLOC_HARDWARE_MODULE_ID) )
+    {
+        if (NULL != s_gralloc_module )
+        {
+            *module = s_gralloc_module;
+            return 0;
+        }
+    }
+
+    ret = hw_get_module_by_class(id, NULL, module);
+
+    if ( 0 == strcmp(id, GRALLOC_HARDWARE_MODULE_ID) )
+    {
+        s_gralloc_module = *module;
+    }
+
+    return ret;
 }

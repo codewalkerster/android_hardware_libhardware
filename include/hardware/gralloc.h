@@ -139,6 +139,22 @@ enum {
      * gralloc modules. */
     GRALLOC_USAGE_ALLOC_MASK            = ~(GRALLOC_USAGE_FOREIGN_BUFFERS),
 
+
+    /* buffer may be used as a cursor */
+    GRALLOC_USAGE_ROT_MASK              = 0x0F000000,
+
+    GRALLOC_USAGE_TO_USE_SINGLE_BUFFER  = 0x0B000000,
+
+    /* mali p010 format */
+    GRALLOC_USAGE_TO_USE_ARM_P010       = 0x0A000000,
+    /* would like to use a fbdc(afbc) format. */
+    GRALLOC_USAGE_TO_USE_FBDC_FMT       = 0x09000000,
+    /* use Physically Continuous memory */
+    GRALLOC_USAGE_TO_USE_PHY_CONT	= 0x08000000,
+    /* replacement of GRALLOC_USAGE_EXTERNAL_DISP,
+     * which is treated as invalid by frameworks. */
+    GRALLOC_USAGE__RK_EXT__EXTERNAL_DISP= 0x07000000U,
+
     /* implementation-specific private usage flags */
     GRALLOC_USAGE_PRIVATE_0             = 0x10000000U,
     GRALLOC_USAGE_PRIVATE_1             = 0x20000000U,
@@ -146,6 +162,123 @@ enum {
     GRALLOC_USAGE_PRIVATE_3             = 0x80000000U,
     GRALLOC_USAGE_PRIVATE_MASK          = 0xF0000000U,
 };
+
+/**
+ * perform operation commands for rk gralloc.
+ * Helpers for using the non-type-safe perform() extension functions. Use
+ * these helpers instead of calling perform() directly in your application.
+ */
+enum {
+  /****************Implement****************/
+  GRALLOC_MODULE_PERFORM_GET_HADNLE_PHY_ADDR       = 0x08100001,
+  GRALLOC_MODULE_PERFORM_GET_HADNLE_PRIME_FD       = 0x08100002,
+  GRALLOC_MODULE_PERFORM_GET_HADNLE_ATTRIBUTES     = 0x08100004,
+  GRALLOC_MODULE_PERFORM_GET_INTERNAL_FORMAT       = 0x08100006,
+  GRALLOC_MODULE_PERFORM_GET_HADNLE_WIDTH          = 0x08100008,
+  GRALLOC_MODULE_PERFORM_GET_HADNLE_HEIGHT         = 0x0810000A,
+  GRALLOC_MODULE_PERFORM_GET_HADNLE_STRIDE         = 0x0810000C,
+  GRALLOC_MODULE_PERFORM_GET_HADNLE_BYTE_STRIDE    = 0x0810000E,
+  GRALLOC_MODULE_PERFORM_GET_HADNLE_FORMAT         = 0x08100010,
+  GRALLOC_MODULE_PERFORM_GET_HADNLE_SIZE           = 0x08100012,
+
+  GRALLOC_MODULE_PERFORM_GET_RK_ASHMEM             = 0x08100014,
+  GRALLOC_MODULE_PERFORM_SET_RK_ASHMEM             = 0x08100016,
+
+  /* perform(const struct gralloc_module_t *mod,
+   *     int op,
+   *     buffer_handle_t buffer,
+   *     int *usage);
+   */
+  GRALLOC_MODULE_PERFORM_GET_USAGE = 0x0feeff03,
+
+
+  /****************Not Implement****************/
+  GRALLOC_MODULE_PERFORM_GET_DRM_FD                = 0x08000002,
+  /* perform(const struct gralloc_module_t *mod,
+   *       int op,
+   *       int drm_fd,
+   *       buffer_handle_t buffer,
+   *       struct hwc_drm_bo *bo);
+   */
+  GRALLOC_MODULE_PERFORM_DRM_IMPORT = 0xffeeff00,
+
+  /* perform(const struct gralloc_module_t *mod,
+   *       int op,
+   *       buffer_handle_t buffer,
+   *       void (*free_callback)(void *),
+   *       void *priv);
+   */
+  GRALLOC_MODULE_PERFORM_SET_IMPORTER_PRIVATE = 0xffeeff01,
+
+  /* perform(const struct gralloc_module_t *mod,
+   *       int op,
+   *       buffer_handle_t buffer,
+   *       void (*free_callback)(void *),
+   *       void **priv);
+   */
+  GRALLOC_MODULE_PERFORM_GET_IMPORTER_PRIVATE = 0xffeeff02,
+};
+
+//eotf type
+enum supported_eotf_type {
+        TRADITIONAL_GAMMA_SDR = 0,
+        TRADITIONAL_GAMMA_HDR,
+        SMPTE_ST2084,  /* HDR10 */
+        HLG,           /* HLG */
+        FUTURE_EOTF
+};
+
+//hdmi_output_colorimetry type
+enum supported_hdmi_colorimetry {
+	COLOR_METRY_NONE=0,
+	COLOR_METRY_ITU_2020=9
+};
+
+struct hdr_static_metadata {
+       uint16_t eotf;
+       uint16_t type;
+       uint16_t display_primaries_x[3];
+       uint16_t display_primaries_y[3];
+       uint16_t white_point_x;
+       uint16_t white_point_y;
+       uint16_t max_mastering_display_luminance;
+       uint16_t min_mastering_display_luminance;
+       uint16_t max_fall;
+       uint16_t max_cll;
+       uint16_t min_cll;
+};
+
+//For Kernel 4.19
+struct hdr_metadata_infoframe {
+      __u8 eotf;
+      __u8 metadata_type;
+      struct {
+         __u16 x, y;
+         } display_primaries[3];
+      struct {
+         __u16 x, y;
+         } white_point;
+      __u16 max_display_mastering_luminance;
+      __u16 min_display_mastering_luminance;
+      __u16 max_cll;
+      __u16 max_fall;
+};
+
+struct hdr_output_metadata {
+    __u32 metadata_type;
+    union {
+        struct hdr_metadata_infoframe hdmi_metadata_type;
+    };
+};
+//End
+
+#define maxLayerNameLength		100
+typedef struct rk_ashmem_t
+{
+    int32_t alreadyStereo;
+    int32_t displayStereo;
+    char LayerName[maxLayerNameLength + 1];
+} rk_ashmem_t;
 
 /*****************************************************************************/
 
@@ -156,20 +289,20 @@ enum {
  */
 typedef struct gralloc_module_t {
     struct hw_module_t common;
-    
+
     /*
      * (*registerBuffer)() must be called before a buffer_handle_t that has not
      * been created with (*alloc_device_t::alloc)() can be used.
-     * 
+     *
      * This is intended to be used with buffer_handle_t's that have been
      * received in this process through IPC.
-     * 
+     *
      * This function checks that the handle is indeed a valid one and prepares
      * it for use with (*lock)() and (*unlock)().
-     * 
-     * It is not necessary to call (*registerBuffer)() on a handle created 
+     *
+     * It is not necessary to call (*registerBuffer)() on a handle created
      * with (*alloc_device_t::alloc)().
-     * 
+     *
      * returns an error if this buffer_handle_t is not valid.
      */
     int (*registerBuffer)(struct gralloc_module_t const* module,
@@ -179,25 +312,25 @@ typedef struct gralloc_module_t {
      * (*unregisterBuffer)() is called once this handle is no longer needed in
      * this process. After this call, it is an error to call (*lock)(),
      * (*unlock)(), or (*registerBuffer)().
-     * 
+     *
      * This function doesn't close or free the handle itself; this is done
      * by other means, usually through libcutils's native_handle_close() and
-     * native_handle_free(). 
-     * 
+     * native_handle_free().
+     *
      * It is an error to call (*unregisterBuffer)() on a buffer that wasn't
      * explicitly registered first.
      */
     int (*unregisterBuffer)(struct gralloc_module_t const* module,
             buffer_handle_t handle);
-    
+
     /*
-     * The (*lock)() method is called before a buffer is accessed for the 
+     * The (*lock)() method is called before a buffer is accessed for the
      * specified usage. This call may block, for instance if the h/w needs
      * to finish rendering or if CPU caches need to be synchronized.
-     * 
-     * The caller promises to modify only pixels in the area specified 
+     *
+     * The caller promises to modify only pixels in the area specified
      * by (l,t,w,h).
-     * 
+     *
      * The content of the buffer outside of the specified area is NOT modified
      * by this call.
      *
@@ -210,9 +343,9 @@ typedef struct gralloc_module_t {
      *
      * THREADING CONSIDERATIONS:
      *
-     * It is legal for several different threads to lock a buffer from 
+     * It is legal for several different threads to lock a buffer from
      * read access, none of the threads are blocked.
-     * 
+     *
      * However, locking a buffer simultaneously for write or read/write is
      * undefined, but:
      * - shall not result in termination of the process
@@ -221,21 +354,21 @@ typedef struct gralloc_module_t {
      * into an indeterminate state.
      *
      * If the buffer was created with a usage mask incompatible with the
-     * requested usage flags here, -EINVAL is returned. 
-     * 
+     * requested usage flags here, -EINVAL is returned.
+     *
      */
-    
+
     int (*lock)(struct gralloc_module_t const* module,
             buffer_handle_t handle, int usage,
             int l, int t, int w, int h,
             void** vaddr);
 
-    
+
     /*
      * The (*unlock)() method must be called after all changes to the buffer
      * are completed.
      */
-    
+
     int (*unlock)(struct gralloc_module_t const* module,
             buffer_handle_t handle);
 
@@ -340,7 +473,7 @@ typedef struct gralloc_module_t {
      */
     int32_t (*validateBufferSize)(
             struct gralloc_module_t const* device, buffer_handle_t handle,
-            uint32_t w, uint32_t h, int32_t format, int usage,
+            uint32_t w, uint32_t h, int32_t format, int usage, int layer_count,
             uint32_t stride);
 
     /* reserved for future use */
@@ -358,32 +491,32 @@ typedef struct gralloc_module_t {
 typedef struct alloc_device_t {
     struct hw_device_t common;
 
-    /* 
+    /*
      * (*alloc)() Allocates a buffer in graphic memory with the requested
      * parameters and returns a buffer_handle_t and the stride in pixels to
      * allow the implementation to satisfy hardware constraints on the width
-     * of a pixmap (eg: it may have to be multiple of 8 pixels). 
+     * of a pixmap (eg: it may have to be multiple of 8 pixels).
      * The CALLER TAKES OWNERSHIP of the buffer_handle_t.
      *
      * If format is HAL_PIXEL_FORMAT_YCbCr_420_888, the returned stride must be
      * 0, since the actual strides are available from the android_ycbcr
      * structure.
-     * 
+     *
      * Returns 0 on success or -errno on error.
      */
-    
+
     int (*alloc)(struct alloc_device_t* dev,
             int w, int h, int format, int usage,
             buffer_handle_t* handle, int* stride);
 
     /*
-     * (*free)() Frees a previously allocated buffer. 
+     * (*free)() Frees a previously allocated buffer.
      * Behavior is undefined if the buffer is still mapped in any process,
      * but shall not result in termination of the program or security breaches
      * (allowing a process to get access to another process' buffers).
      * THIS FUNCTION TAKES OWNERSHIP of the buffer_handle_t which becomes
-     * invalid after the call. 
-     * 
+     * invalid after the call.
+     *
      * Returns 0 on success or -errno on error.
      */
     int (*free)(struct alloc_device_t* dev,
@@ -401,9 +534,9 @@ typedef struct alloc_device_t {
 
 /** convenience API for opening and closing a supported device */
 
-static inline int gralloc_open(const struct hw_module_t* module, 
+static inline int gralloc_open(const struct hw_module_t* module,
         struct alloc_device_t** device) {
-    return module->methods->open(module, 
+    return module->methods->open(module,
             GRALLOC_HARDWARE_GPU0, TO_HW_DEVICE_T_OPEN(device));
 }
 
