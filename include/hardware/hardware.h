@@ -230,6 +230,11 @@ typedef enum {
     HAL_PIXEL_FORMAT_YCrCb_NV12_10      = 0x17, // YUY2_1obit
     HAL_PIXEL_FORMAT_YCbCr_422_SP_10    = 0x18, //
     HAL_PIXEL_FORMAT_YCrCb_420_SP_10    = 0x19, //
+
+    HAL_PIXEL_FORMAT_YUV420_8BIT_I      = 0x1A, // 420I 8bit
+    HAL_PIXEL_FORMAT_YUV420_10BIT_I     = 0x1B, // 420I 10bit
+    HAL_PIXEL_FORMAT_Y210               = 0x1C, // 422I 10bit
+
     HAL_PIXEL_FORMAT_BPP_1              = 0x30,
     HAL_PIXEL_FORMAT_BPP_2              = 0x31,
     HAL_PIXEL_FORMAT_BPP_4              = 0x32,
