@@ -245,13 +245,13 @@ static bool getResolutionInfo(hw_output_private_t *priv, int dpy, char* resoluti
                 else
                     vfresh = drm_mode->clock / (float)(drm_mode->vtotal * drm_mode->htotal) * 1000.0f;
                 ALOGD("nativeGetCurMode: crtc_id=%d clock=%d w=%d %d %d %d %d %d flag=0x%x vfresh %.2f drm.vrefresh=%.2f", 
-                        crtc->id(), drm_mode->clock, drm_mode->hdisplay, drm_mode->hsync_start,
-                        drm_mode->hsync_end, drm_mode->vdisplay, drm_mode->vsync_start, drm_mode->vsync_end, drm_mode->flags,
+                        crtc->id(), drm_mode->clock, drm_mode->htotal, drm_mode->hsync_start,
+                        drm_mode->hsync_end, drm_mode->vtotal, drm_mode->vsync_start, drm_mode->vsync_end, drm_mode->flags,
                         vfresh, (float)drm_mode->vrefresh);
                 sprintf(resolution, "%dx%d@%.2f-%d-%d-%d-%d-%d-%d-%x", drm_mode->hdisplay, drm_mode->vdisplay, vfresh,
                         drm_mode->hsync_start, drm_mode->hsync_end, drm_mode->htotal,
                         drm_mode->vsync_start, drm_mode->vsync_end, drm_mode->vtotal,
-                        drm_mode->flags);
+                        (drm_mode->flags&0xFFFF));
                 drmModeFreePropertyBlob(blob);
             }
             drmModeFreeProperty(p);
