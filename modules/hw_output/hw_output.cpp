@@ -76,6 +76,7 @@ hw_output_module_t HAL_MODULE_INFO_SYM = {
 
 static char const *const device_template[] =
 {
+    "/dev/block/by-name/baseparameter",
     "/dev/block/platform/1021c000.dwmmc/by-name/baseparameter",
     "/dev/block/platform/30020000.dwmmc/by-name/baseparameter",
     "/dev/block/platform/fe330000.sdhci/by-name/baseparameter",
