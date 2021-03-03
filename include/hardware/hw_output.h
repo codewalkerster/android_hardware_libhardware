@@ -356,7 +356,9 @@ typedef struct hw_output_device {
 	void (*hotplug)(struct hw_output_device* dev);
 	void (*saveConfig)(struct hw_output_device* dev);
 	int (*set3DMode)(struct hw_output_device* dev, const char* mode);
-    void* reserved[2];
+	int (*set3DLut)(struct hw_output_device* dev,
+        int dpy,  uint32_t size, uint16_t* r, uint16_t* g, uint16_t* b);
+	void* reserved[1];
 } hw_output_device_t;
 /** convenience API for opening and closing a supported device */
 

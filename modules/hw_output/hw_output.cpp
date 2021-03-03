@@ -39,9 +39,11 @@
 #include "rkdisplay/drmresources.h"
 #include "rkdisplay/drmmode.h"
 #include "rkdisplay/drmconnector.h"
+#include "rkdisplay/drmgamma.h"
 
 using namespace android;
 /*****************************************************************************/
+
 typedef struct hw_output_private {
     hw_output_device_t device;
 
@@ -910,9 +912,25 @@ static int hw_output_set_gamma(struct hw_output_device* dev, int dpy, uint32_t s
         crtc_id = priv->drm_->GetCrtcFromConnector(priv->primary)->id();
     else if (priv->extend)
         crtc_id = priv->drm_->GetCrtcFromConnector(priv->extend)->id();
-    ret = drmModeCrtcSetGamma(priv->drm_->fd(), crtc_id, size, r, g, b);
+    ret = DrmGamma::set_3x1d_gamma(priv->drm_->fd(), crtc_id, size, r, g, b);
     if (ret < 0)
         ALOGE("fail to SetGamma %d(%s)", ret, strerror(errno));
+    return ret;
+}
+
+static int hw_output_set_3d_lut(struct hw_output_device* dev, int dpy, uint32_t size, uint16_t* r, uint16_t* g, uint16_t* b)
+{
+    hw_output_private_t* priv = (hw_output_private_t*)dev;
+    int ret = -1;
+    int crtc_id = 0;
+
+    if (dpy == HWC_DISPLAY_PRIMARY && priv->primary)
+        crtc_id = priv->drm_->GetCrtcFromConnector(priv->primary)->id();
+    else if (priv->extend)
+        crtc_id = priv->drm_->GetCrtcFromConnector(priv->extend)->id();
+    ret = DrmGamma::set_cubic_lut(priv->drm_->fd(), crtc_id, size, r, g, b);
+    if (ret < 0)
+        ALOGE("fail to set 3d lut %d(%s)", ret, strerror(errno));
     return ret;
 }
 
@@ -1453,6 +1471,7 @@ static int hw_output_device_open(const struct hw_module_t* module,
 
         dev->device.hotplug = hw_output_hotplug_update;
         dev->device.saveConfig = hw_output_save_config;
+        dev->device.set3DLut = hw_output_set_3d_lut;
         *device = &dev->device.common;
         status = 0;
     }
