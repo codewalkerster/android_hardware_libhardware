@@ -32,7 +32,6 @@
 #define PIN_MAX 41
 #define I2C_MAX 2
 #define PWM_MAX 4
-#define UART_MAX 2
 #define SPI_MAX 1
 
 namespace hardware {
