@@ -40,6 +40,7 @@ DrmConnector::DrmConnector(DrmResources *drm, drmModeConnectorPtr c,
       mm_width_(c->mmWidth),
       mm_height_(c->mmHeight),
       possible_encoders_(possible_encoders),
+      possible_displays_(0),
       connector_(c) {
 }
 
@@ -63,6 +64,11 @@ int DrmConnector::Init() {
   ret = drm_->GetConnectorProperty(*this, "hdmi_color_depth_capacity", &hdmi_color_depth_capacity_);
   if (ret) {
     ALOGW("Could not get hdmi_output_format property\n");
+  }
+
+  ret = drm_->GetConnectorProperty(*this, "CONNECTOR_ID", &connector_id_);
+  if (ret) {
+    ALOGW("Could not get CONNECTOR_ID property\n");
   }
 
   return 0;
@@ -183,6 +189,12 @@ const DrmProperty &DrmConnector::dpms_property() const {
 
 const DrmProperty &DrmConnector::crtc_id_property() const {
   return crtc_id_property_;
+}
+
+uint32_t DrmConnector::connector_id() {
+  uint64_t id=0;
+  connector_id_.value(&id);
+  return (uint32_t)id;
 }
 
 const DrmProperty &DrmConnector::hdmi_output_mode_capacity_property() const {

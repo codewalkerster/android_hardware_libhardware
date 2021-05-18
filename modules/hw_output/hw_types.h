@@ -26,6 +26,7 @@ struct lut_info{
     struct lut_data aux;
 };
 
+#if 0
 #define BUFFER_LENGTH    256
 #define AUTO_BIT_RESET 0x00
 #define RESOLUTION_AUTO 1<<0
@@ -110,4 +111,5 @@ struct file_base_paramer
     struct disp_info main;
     struct disp_info aux;
 };
+#endif
 #endif
