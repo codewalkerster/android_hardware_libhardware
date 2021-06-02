@@ -143,3 +143,8 @@ bool BaseParameterV2::validate() {
         return false;
     return mBaseParmApi->validate();     
 }
+int BaseParameterV2::get_all_disp_header(struct disp_header *headers) {
+    if (mBaseParmApi == nullptr)
+        return -1;
+    return mBaseParmApi->get_all_disp_header(headers);
+}

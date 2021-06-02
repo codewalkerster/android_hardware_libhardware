@@ -80,6 +80,9 @@ int DrmGamma::set_3x1d_gamma(int fd, unsigned crtc_id, uint32_t size, uint16_t* 
 	}
 	props = drmModeObjectGetProperties(fd, crtc_id, DRM_MODE_OBJECT_CRTC);
 	uint32_t property_id = get_property_id(fd, props, "GAMMA_LUT");
+	if(property_id == 0){
+		ALOGE("can't find GAMMA_LUT");
+	}
 	drmModeCreatePropertyBlob(fd, gamma_lut, sizeof(gamma_lut), &blob_id);
 	ret = drmModeObjectSetProperty(fd, crtc_id, DRM_MODE_OBJECT_CRTC, property_id, blob_id);
 	return ret;
@@ -89,16 +92,19 @@ int DrmGamma::set_cubic_lut(int fd, unsigned crtc_id, uint32_t size, uint16_t* r
 {
 	unsigned blob_id = 0;
 	drmModeObjectProperties *props;
-	struct drm_color_lut gamma_lut[size];
+	struct drm_color_lut cubic_lut[size];
 	int i, ret;
 	for (i = 0; i < size; i++) {
-		gamma_lut[i].red = r[i];
-		gamma_lut[i].green = g[i];
-		gamma_lut[i].blue = b[i];
+		cubic_lut[i].red = r[i];
+		cubic_lut[i].green = g[i];
+		cubic_lut[i].blue = b[i];
 	}
 	props = drmModeObjectGetProperties(fd, crtc_id, DRM_MODE_OBJECT_CRTC);
 	uint32_t property_id = get_property_id(fd, props, "CUBIC_LUT");
-	drmModeCreatePropertyBlob(fd, gamma_lut, sizeof(gamma_lut), &blob_id);
+	if(property_id == 0){
+		ALOGE("can't find CUBIC_LUT");
+	}
+	drmModeCreatePropertyBlob(fd, cubic_lut, sizeof(cubic_lut), &blob_id);
 	ret = drmModeObjectSetProperty(fd, crtc_id, DRM_MODE_OBJECT_CRTC, property_id, blob_id);
 	return ret;
 }

@@ -162,7 +162,7 @@ static std::string getPropertySuffix(hw_output_private_t *priv, std::string head
         const char* connTypeStr = priv->drm_->connector_type_str(conn->get_type());
         int id = conn->connector_id();
         suffix += connTypeStr;
-        suffix += '.';
+        suffix += '-';
         ALOGD("id=%d", id);
         suffix += std::to_string(id);
     }
@@ -498,6 +498,7 @@ static int hw_output_set_3d_mode(struct hw_output_device*, const char* mode)
 static int hw_output_set_gamma(struct hw_output_device* dev, int dpy, uint32_t size, uint16_t* r, uint16_t* g, uint16_t* b)
 {
     hw_output_private_t* priv = (hw_output_private_t*)dev;
+    BaseParameter* mBaseParameter = priv->mBaseParmeter;
     DrmConnector* mConnector = getValidDrmConnector(priv, dpy);
     int ret = -1;
     int crtc_id = 0;
@@ -508,12 +509,23 @@ static int hw_output_set_gamma(struct hw_output_device* dev, int dpy, uint32_t s
     ret = DrmGamma::set_3x1d_gamma(priv->drm_->fd(), crtc_id, size, r, g, b);
     if (ret < 0)
         ALOGE("fail to SetGamma %d(%s)", ret, strerror(errno));
+    if(ret == 0){
+        struct gamma_lut_data data;
+        data.size = size;
+        for(int i = 0; i< size; i++){
+            data.lred[i] = r[i];
+            data.lgreen[i] = g[i];
+            data.lblue[i] = b[i];
+        }
+        mBaseParameter->set_gamma_lut_data(mConnector->get_type(), mConnector->connector_id(), &data);
+    }
     return ret;
 }
 
 static int hw_output_set_3d_lut(struct hw_output_device* dev, int dpy, uint32_t size, uint16_t* r, uint16_t* g, uint16_t* b)
 {
     hw_output_private_t* priv = (hw_output_private_t*)dev;
+    BaseParameter* mBaseParameter = priv->mBaseParmeter;
     DrmConnector* mConnector = getValidDrmConnector(priv, dpy);
     int ret = -1;
     int crtc_id = 0;
@@ -523,6 +535,15 @@ static int hw_output_set_3d_lut(struct hw_output_device* dev, int dpy, uint32_t 
     ret = DrmGamma::set_cubic_lut(priv->drm_->fd(), crtc_id, size, r, g, b);
     if (ret < 0)
         ALOGE("fail to set 3d lut %d(%s)", ret, strerror(errno));
+    if(ret == 0){
+        struct cubic_lut_data data;
+        for(int i = 0; i< size; i++){
+            data.lred[i] = r[i];
+            data.lgreen[i] = g[i];
+            data.lblue[i] = b[i];
+        }
+        mBaseParameter->set_cubic_lut_data(mConnector->get_type(), mConnector->connector_id(), &data);
+    }
     return ret;
 }
 
@@ -542,7 +563,7 @@ static int hw_output_set_brightness(struct hw_output_device* dev, int dpy, int b
     if (atoi(property) != brightness) {
         property_set(propertyStr.c_str(), tmp);
         updateTimeline();
-        mBaseParameter->set_brightness(conn->get_type(), conn->id(), brightness);
+        mBaseParameter->set_brightness(conn->get_type(), conn->connector_id(), brightness);
     }
     return 0;
 }
@@ -563,7 +584,7 @@ static int hw_output_set_contrast(struct hw_output_device* dev, int dpy, int con
     if (atoi(property) != contrast) {
         property_set(propertyStr.c_str(), tmp);
         updateTimeline();
-        mBaseParameter->set_contrast(conn->get_type(), conn->id(), contrast);
+        mBaseParameter->set_contrast(conn->get_type(), conn->connector_id(), contrast);
     }
     return 0;
 }
@@ -584,7 +605,7 @@ static int hw_output_set_sat(struct hw_output_device* dev, int dpy, int sat)
     if (atoi(property) != sat) {
         property_set(propertyStr.c_str(), tmp);
         updateTimeline();
-        mBaseParameter->set_saturation(conn->get_type(), conn->id(), sat);
+        mBaseParameter->set_saturation(conn->get_type(), conn->connector_id(), sat);
     }
     return 0;
 }
@@ -605,7 +626,7 @@ static int hw_output_set_hue(struct hw_output_device* dev, int dpy, int hue)
     if (atoi(property) != hue) {
         property_set(propertyStr.c_str(), tmp);
         updateTimeline();
-        mBaseParameter->set_hue(conn->get_type(), conn->id(), hue);
+        mBaseParameter->set_hue(conn->get_type(), conn->connector_id(), hue);
     }
     return 0;
 }
@@ -718,7 +739,7 @@ static int hw_output_get_cur_color_mode(struct hw_output_device* dev, int dpy, c
 
     ALOGD("nativeGetCurCorlorMode: property=%s", colorMode);
     if (!len && mBaseParmeter && mBaseParmeter->have_baseparameter()) {
-        mBaseParmeter->get_disp_info(mCurConnector->get_type(), mCurConnector->id(), &dispInfo);
+        mBaseParmeter->get_disp_info(mCurConnector->get_type(), mCurConnector->connector_id(), &dispInfo);
         int slot = findSuitableInfoSlot(&dispInfo, mCurConnector->get_type(), mCurConnector->id());
         if (dispInfo.screen_info[slot].depthc == Automatic &&
                 dispInfo.screen_info[slot].format == output_ycbcr_high_subsampling)
@@ -804,7 +825,7 @@ static int hw_output_get_bcsh(struct hw_output_device* dev, int dpy, uint32_t* b
     if (property_get(propertyStr.c_str(), mBcshProperty, NULL) > 0) {
         bcshs[0] = atoi(mBcshProperty);
     } else if (mBaseParmeter&&mBaseParmeter->have_baseparameter()) {
-        bcshs[0] = mBaseParmeter->get_brightness(conn->get_type(), conn->id());
+        bcshs[0] = mBaseParmeter->get_brightness(conn->get_type(), conn->connector_id());
     } else {
          bcshs[0] = DEFAULT_BRIGHTNESS;
     }
@@ -814,7 +835,7 @@ static int hw_output_get_bcsh(struct hw_output_device* dev, int dpy, uint32_t* b
     if (property_get(propertyStr.c_str(), mBcshProperty, NULL) > 0) {
         bcshs[1] = atoi(mBcshProperty);
     } else if (mBaseParmeter&&mBaseParmeter->have_baseparameter()) {
-        bcshs[1] = mBaseParmeter->get_contrast(conn->get_type(), conn->id());
+        bcshs[1] = mBaseParmeter->get_contrast(conn->get_type(), conn->connector_id());
     } else {
          bcshs[1] = DEFAULT_CONTRAST;
     }
@@ -824,7 +845,7 @@ static int hw_output_get_bcsh(struct hw_output_device* dev, int dpy, uint32_t* b
     if (property_get(propertyStr.c_str(), mBcshProperty, NULL) > 0) {
         bcshs[2] = atoi(mBcshProperty);
     } else if (mBaseParmeter&&mBaseParmeter->have_baseparameter()) {
-        bcshs[2] = mBaseParmeter->get_contrast(conn->get_type(), conn->id());
+        bcshs[2] = mBaseParmeter->get_contrast(conn->get_type(), conn->connector_id());
     } else {
          bcshs[2] = DEFAULT_SATURATION;
     }
@@ -834,7 +855,7 @@ static int hw_output_get_bcsh(struct hw_output_device* dev, int dpy, uint32_t* b
     if (property_get(propertyStr.c_str(), mBcshProperty, NULL) > 0) {
         bcshs[3] = atoi(mBcshProperty);
     } else if (mBaseParmeter&&mBaseParmeter->have_baseparameter()) {
-        bcshs[3] = mBaseParmeter->get_hue(conn->get_type(), conn->id());
+        bcshs[3] = mBaseParmeter->get_hue(conn->get_type(), conn->connector_id());
     } else {
          bcshs[3] = DEFAULT_SATURATION;
     }
@@ -930,6 +951,52 @@ static int hw_output_device_close(struct hw_device_t *dev)
     return 0;
 }
 
+static connector_info_t* hw_output_get_connector_info(struct hw_output_device* dev, uint32_t* size)
+{
+    hw_output_private_t* priv = (hw_output_private_t*)dev;
+    *size = 0;
+    connector_info_t* connector_info = NULL;
+    connector_info = (connector_info_t*)malloc(sizeof(connector_info_t) * priv->drm_->connectors().size());
+    int i = 0;
+    for (auto &conn : priv->drm_->connectors()) {
+        connector_info[i].type = conn->get_type();
+        connector_info[i].id = (uint32_t)conn->connector_id();
+        connector_info[i].state = (uint32_t)conn->state();
+        i++;
+    }
+    *size = i;
+    return connector_info;
+}
+
+static int hw_output_update_disp_header(struct hw_output_device *dev)
+{
+    bool found = false;
+    int ret = 0, firstEmptyHeader = -1;
+    hw_output_private_t* priv = (hw_output_private_t*)dev;
+    BaseParameter* mBaseParmeter = priv->mBaseParmeter;
+    struct disp_header * headers = (disp_header *)malloc(sizeof(disp_header) * 8);
+    for (auto &conn : priv->drm_->connectors()) {
+        if(conn->state() == DRM_MODE_CONNECTED){
+            found = false;
+            firstEmptyHeader = -1;
+            mBaseParmeter->get_all_disp_header(headers);
+            for(int i = 0; i < 8; i++){
+                if(headers[i].connector_type == conn->get_type() && headers[i].connector_id == conn->connector_id()){
+                    found = true;
+                }
+                if(firstEmptyHeader == -1 && headers[i].connector_type == 0 && headers[i].connector_id == 0){
+                    firstEmptyHeader = i;
+                }
+            }
+            if(!found){
+                ret = mBaseParmeter->set_disp_header(firstEmptyHeader, conn->get_type(), conn->connector_id());
+            }
+        }
+    }
+    free(headers);
+    return ret;
+}
+
 static int hw_output_device_open(const struct hw_module_t* module,
         const char* name, struct hw_device_t** device)
 {
@@ -971,6 +1038,8 @@ static int hw_output_device_open(const struct hw_module_t* module,
         dev->device.hotplug = hw_output_hotplug_update;
         dev->device.saveConfig = hw_output_save_config;
         dev->device.set3DLut = hw_output_set_3d_lut;
+        dev->device.getConnectorInfo = hw_output_get_connector_info;
+        dev->device.updateDispHeader = hw_output_update_disp_header;
         *device = &dev->device.common;
         status = 0;
     }

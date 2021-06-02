@@ -8,6 +8,7 @@ public:
     BaseParameter(){};
     virtual ~BaseParameter(){}
     virtual bool have_baseparameter() = 0;
+    virtual int dump_baseparameter(const char *file_path) = 0;
     virtual int get_disp_info(unsigned int connector_type, unsigned int connector_id, struct disp_info *info) = 0;
     virtual int set_disp_info(unsigned int connector_type, unsigned int connector_id, struct disp_info *info) = 0;
     virtual int get_screen_info(unsigned int connector_type, unsigned int connector_id, int index, struct screen_info *screen_info) = 0;
@@ -28,6 +29,7 @@ public:
     virtual int set_cubic_lut_data(unsigned int connector_type, unsigned int connector_id, struct cubic_lut_data *data) = 0;
     virtual int set_disp_header(unsigned int index, unsigned int connector_type, unsigned int connector_id) = 0;
     virtual bool validate() = 0;
+    virtual int get_all_disp_header(struct disp_header *headers) = 0;
 };
 
 class BaseParameterV1 : public BaseParameter {
@@ -56,6 +58,7 @@ public:
     int set_cubic_lut_data(unsigned int connector_type, unsigned int connector_id, struct cubic_lut_data *data);
     int set_disp_header(unsigned int index, unsigned int connector_type, unsigned int connector_id);
     bool validate();
+    int get_all_disp_header(struct disp_header *headers);
 };
 
 class BaseParameterV2 : public BaseParameter {
@@ -84,6 +87,7 @@ public:
     virtual int set_cubic_lut_data(unsigned int connector_type, unsigned int connector_id, struct cubic_lut_data *data);
     virtual int set_disp_header(unsigned int index, unsigned int connector_type, unsigned int connector_id);
     virtual bool validate();
+    virtual int get_all_disp_header(struct disp_header *headers);
 private:
     baseparameter_api* mBaseParmApi;
 };
