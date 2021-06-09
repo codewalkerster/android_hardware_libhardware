@@ -216,7 +216,7 @@ static bool getResolutionInfo(hw_output_private_t *priv, int dpy, char* resoluti
 
     if (mBaseParmeter && mBaseParmeter->have_baseparameter()) {
         if (mCurConnector)
-            mBaseParmeter->get_disp_info(mCurConnector->get_type(), mCurConnector->id(), &info);
+            mBaseParmeter->get_disp_info(mCurConnector->get_type(), mCurConnector->connector_id(), &info);
         int slot = findSuitableInfoSlot(&info, mCurConnector->get_type(), mCurConnector->id());
         if (!info.screen_info[slot].resolution.hdisplay ||
             !info.screen_info[slot].resolution.clock ||
@@ -463,7 +463,7 @@ static int hw_output_set_mode(struct hw_output_device* dev, int dpy, const char*
         float vfresh=0.0f;
         int slot = 0;
 
-        mBaseParameter->get_disp_info(conn->get_type(), conn->id(), &info);
+        mBaseParameter->get_disp_info(conn->get_type(), conn->connector_id(), &info);
         slot = findSuitableInfoSlot(&info, conn->get_type(), conn->id());
         info.screen_info[slot].type = conn->get_type();
         info.screen_info[slot].id = conn->id();
@@ -478,7 +478,7 @@ static int hw_output_set_mode(struct hw_output_device* dev, int dpy, const char*
             info.screen_info[slot].feature|= RESOLUTION_AUTO;
             memset(&info.screen_info[slot].resolution, 0, sizeof(info.screen_info[slot].resolution));
         }
-        mBaseParameter->set_disp_info(conn->get_type(), conn->id(), &info);
+        mBaseParameter->set_disp_info(conn->get_type(), conn->connector_id(), &info);
     }
     return 0;
 }
