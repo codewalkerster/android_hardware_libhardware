@@ -217,7 +217,7 @@ static bool getResolutionInfo(hw_output_private_t *priv, int dpy, char* resoluti
     if (mBaseParmeter && mBaseParmeter->have_baseparameter()) {
         if (mCurConnector)
             mBaseParmeter->get_disp_info(mCurConnector->get_type(), mCurConnector->connector_id(), &info);
-        int slot = findSuitableInfoSlot(&info, mCurConnector->get_type(), mCurConnector->id());
+        int slot = findSuitableInfoSlot(&info, mCurConnector->get_type(), mCurConnector->connector_id());
         if (!info.screen_info[slot].resolution.hdisplay ||
             !info.screen_info[slot].resolution.clock ||
             !info.screen_info[slot].resolution.vdisplay) {
@@ -464,7 +464,7 @@ static int hw_output_set_mode(struct hw_output_device* dev, int dpy, const char*
         int slot = 0;
 
         mBaseParameter->get_disp_info(conn->get_type(), conn->connector_id(), &info);
-        slot = findSuitableInfoSlot(&info, conn->get_type(), conn->id());
+        slot = findSuitableInfoSlot(&info, conn->get_type(), conn->connector_id());
         info.screen_info[slot].type = conn->get_type();
         info.screen_info[slot].id = conn->id();
         if (strncmp(mode, "Auto", 4) != 0 && strncmp(mode, "0x0p0-0", 7) !=0) {
@@ -740,7 +740,7 @@ static int hw_output_get_cur_color_mode(struct hw_output_device* dev, int dpy, c
     ALOGD("nativeGetCurCorlorMode: property=%s", colorMode);
     if (!len && mBaseParmeter && mBaseParmeter->have_baseparameter()) {
         mBaseParmeter->get_disp_info(mCurConnector->get_type(), mCurConnector->connector_id(), &dispInfo);
-        int slot = findSuitableInfoSlot(&dispInfo, mCurConnector->get_type(), mCurConnector->id());
+        int slot = findSuitableInfoSlot(&dispInfo, mCurConnector->get_type(), mCurConnector->connector_id());
         if (dispInfo.screen_info[slot].depthc == Automatic &&
                 dispInfo.screen_info[slot].format == output_ycbcr_high_subsampling)
             sprintf(colorMode, "%s", "Auto");
