@@ -692,16 +692,51 @@ static int hw_output_set_hdr_mode(struct hw_output_device* dev, int dpy, int hdr
 static int hw_output_set_color_mode(struct hw_output_device* dev, int dpy, const char* color_mode)
 {
     hw_output_private_t* priv = (hw_output_private_t*)dev;
+    BaseParameter* mBaseParameter = priv->mBaseParmeter;
+    DrmConnector* conn = getValidDrmConnector(priv, dpy);
     std::string propertyStr;
+    struct disp_info info;
     char property[PROPERTY_VALUE_MAX];
 
     propertyStr = getPropertySuffix(priv, "persist.vendor.color.", dpy);
     property_get(propertyStr.c_str(), property, NULL);
-    ALOGD("hw_output_set_color_mode %s display %d ", color_mode, dpy);
+    ALOGD("hw_output_set_color_mode %s display %d property=%s", color_mode, dpy, property);
 
     if (strcmp(color_mode, property) !=0) {
         property_set(propertyStr.c_str(), color_mode);
+        property_get(propertyStr.c_str(), property, NULL);
         updateTimeline();
+    }
+    if (conn) {
+        mBaseParameter->get_disp_info(conn->get_type(), conn->connector_id(), &info);
+        int slot = findSuitableInfoSlot(&info, conn->get_type(), conn->connector_id());
+        if (strncmp(property, "Auto", 4) != 0){
+            if (strstr(property, "RGB") != 0)
+                info.screen_info[slot].format = output_rgb;
+            else if (strstr(property, "YCBCR444") != 0)
+                info.screen_info[slot].format = output_ycbcr444;
+            else if (strstr(property, "YCBCR422") != 0)
+                info.screen_info[slot].format = output_ycbcr422;
+            else if (strstr(property, "YCBCR420") != 0)
+                info.screen_info[slot].format = output_ycbcr420;
+            else {
+                info.screen_info[slot].feature |= COLOR_AUTO;
+                info.screen_info[slot].format = output_ycbcr_high_subsampling;
+            }
+
+            if (strstr(property, "8bit") != NULL)
+                info.screen_info[slot].depthc = depth_24bit;
+            else if (strstr(property, "10bit") != NULL)
+                info.screen_info[slot].depthc = depth_30bit;
+            else
+                info.screen_info[slot].depthc = Automatic;
+        } else {
+            info.screen_info[slot].depthc = Automatic;
+            info.screen_info[slot].format = output_ycbcr_high_subsampling;
+            info.screen_info[slot].feature |= COLOR_AUTO;
+        }
+        ALOGD("saveConfig: color=%d-%d", info.screen_info[slot].format, info.screen_info[slot].depthc);
+        mBaseParameter->set_disp_info(conn->get_type(), conn->connector_id(), &info);
     }
     return 0;
 }
