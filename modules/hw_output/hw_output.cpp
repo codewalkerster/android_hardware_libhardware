@@ -466,7 +466,7 @@ static int hw_output_set_mode(struct hw_output_device* dev, int dpy, const char*
         mBaseParameter->get_disp_info(conn->get_type(), conn->connector_id(), &info);
         slot = findSuitableInfoSlot(&info, conn->get_type(), conn->connector_id());
         info.screen_info[slot].type = conn->get_type();
-        info.screen_info[slot].id = conn->id();
+        info.screen_info[slot].id = conn->connector_id();
         if (strncmp(mode, "Auto", 4) != 0 && strncmp(mode, "0x0p0-0", 7) !=0) {
             sscanf(mode,"%dx%d@%f-%d-%d-%d-%d-%d-%d-%x-%d",
                     &info.screen_info[slot].resolution.hdisplay, &info.screen_info[slot].resolution.vdisplay,
