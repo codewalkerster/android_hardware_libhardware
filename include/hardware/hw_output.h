@@ -25,8 +25,6 @@
 #include <system/audio.h>
 #include <cutils/native_handle.h>
 
-#include "hw_types.h"
-
 __BEGIN_DECLS
 
 #define HW_OUTPUT_MODULE_API_VERSION_0_1  HARDWARE_MODULE_API_VERSION(0, 1)

@@ -3,6 +3,15 @@
 
 #include "baseparameter_api.h"
 
+#include <map>
+
+#include "hw_types.h"
+#include "rkdisplay/drmresources.h"
+#include "rkdisplay/drmmode.h"
+#include "rkdisplay/drmconnector.h"
+#include "rockchip/baseparameter.h"
+
+using namespace android;
 class BaseParameter {
 public:
     BaseParameter(){};
@@ -30,6 +39,8 @@ public:
     virtual int set_disp_header(unsigned int index, unsigned int connector_type, unsigned int connector_id) = 0;
     virtual bool validate() = 0;
     virtual int get_all_disp_header(struct disp_header *headers) = 0;
+    virtual void set_drm_connectors(std::map<int,DrmConnector*> conns) = 0;
+    virtual void saveConfig() = 0;
 };
 
 class BaseParameterV1 : public BaseParameter {
@@ -59,6 +70,13 @@ public:
     int set_disp_header(unsigned int index, unsigned int connector_type, unsigned int connector_id);
     bool validate();
     int get_all_disp_header(struct disp_header *headers);
+    void set_drm_connectors(std::map<int,DrmConnector*> conns);
+    void saveConfig();
+private:
+    int getDisplayId(unsigned int connector_type, unsigned int connector_id);
+    struct file_base_paramer_v1* mBaseParameterInfos;
+    std::map<int,DrmConnector*> mConns;
+    bool hasInitial;
 };
 
 class BaseParameterV2 : public BaseParameter {
@@ -88,6 +106,8 @@ public:
     virtual int set_disp_header(unsigned int index, unsigned int connector_type, unsigned int connector_id);
     virtual bool validate();
     virtual int get_all_disp_header(struct disp_header *headers);
+    virtual void set_drm_connectors(std::map<int,DrmConnector*> conns){(void)conns;}
+    virtual void saveConfig() {}
 private:
     baseparameter_api* mBaseParmApi;
 };

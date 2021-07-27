@@ -42,7 +42,6 @@
 #include "rkdisplay/drmgamma.h"
 #include "rockchip/baseparameter.h"
 
-
 using namespace android;
 
 #define LOG_LEVEL_ERROR 0
@@ -50,7 +49,7 @@ using namespace android;
 #define LOG_LEVEL_INFO 2
 #define LOG_LEVEL_DEBUG 3
 
-
+static int mHwcVersion = 0;
 std::map<int,DrmConnector*> mGlobalConns;
 static int dbgLevel = 3;
 #define LOG_INFO(format, ...) \
@@ -157,21 +156,21 @@ static std::string getPropertySuffix(hw_output_private_t *priv, std::string head
     std::string suffix;
 
     suffix = header;
-#if 1
-    if (conn != nullptr) {
-        const char* connTypeStr = priv->drm_->connector_type_str(conn->get_type());
-        int id = conn->connector_id();
-        suffix += connTypeStr;
-        suffix += '-';
-        ALOGD("id=%d", id);
-        suffix += std::to_string(id);
+    if (mHwcVersion == 2) {
+        if (conn != nullptr) {
+            const char* connTypeStr = priv->drm_->connector_type_str(conn->get_type());
+            int id = conn->connector_id();
+            suffix += connTypeStr;
+            suffix += '-';
+            ALOGD("id=%d", id);
+            suffix += std::to_string(id);
+        }
+    } else {
+        if (dpy == HWC_DISPLAY_PRIMARY)
+            suffix += "main";
+        else
+            suffix += "aux";
     }
-#else
-    if (dpy == HWC_DISPLAY_PRIMARY)
-        suffix += "main";
-    else
-        suffix += "aux";
-#endif
     ALOGD("suffix=%s", suffix.c_str());
     return suffix;
 }
@@ -314,11 +313,11 @@ static void updateConnectors(hw_output_private_t *priv){
     }
 }
 
-
 /*****************************************************************************/
 static void hw_output_save_config(struct hw_output_device* dev){
     hw_output_private_t* priv = (hw_output_private_t*)dev;
-    (void)priv;
+    if (priv->mBaseParmeter)
+        priv->mBaseParmeter->saveConfig();
 }
 
 static void hw_output_hotplug_update(struct hw_output_device* dev){
@@ -404,6 +403,20 @@ static void hw_output_hotplug_update(struct hw_output_device* dev){
     updateConnectors(priv);
 }
 
+static int hw_output_init_baseparameter(BaseParameter** mBaseParmeter)
+{
+    char property[100];
+    property_get("vendor.ghwc.version", property, NULL);
+    if (strstr(property, "HWC2") != NULL) {
+        *mBaseParmeter = new BaseParameterV2();
+        mHwcVersion = 2;
+    } else {
+        *mBaseParmeter = new BaseParameterV1();
+        mHwcVersion = 1;
+    }
+    return 0;
+}
+
 static int hw_output_initialize(struct hw_output_device* dev, void* data)
 {
     hw_output_private_t* priv = (hw_output_private_t*)dev;
@@ -413,17 +426,26 @@ static int hw_output_initialize(struct hw_output_device* dev, void* data)
     priv->extend = NULL;
     priv->mlut = NULL;
     priv->callback_data = data;
-    priv->mBaseParmeter = new BaseParameterV2();
+    hw_output_init_baseparameter(&priv->mBaseParmeter);
 
     if (priv->drm_ == NULL) {
         priv->drm_ = new DrmResources();
         priv->drm_->Init();
         ALOGD("nativeInit: ");
-        int display = 0;
-        for (auto &conn : priv->drm_->connectors()) {
-            mGlobalConns.insert(std::make_pair(display, conn.get()));
-            display++;
+        if (mHwcVersion >= 2) {
+            int id=0;
+            for (auto &conn : priv->drm_->connectors())
+                mGlobalConns.insert(std::make_pair(id++, conn.get()));
+        } else {
+            int id=1;
+            for (auto &conn : priv->drm_->connectors()) {
+                if (conn->possible_displays() & HWC_DISPLAY_PRIMARY_BIT)
+                    mGlobalConns.insert(std::make_pair(HWC_DISPLAY_PRIMARY, conn.get()));
+                else
+                    mGlobalConns.insert(std::make_pair(id++, conn.get()));
+            }
         }
+        priv->mBaseParmeter->set_drm_connectors(mGlobalConns);
         hw_output_hotplug_update(dev);
         if (priv->primary == NULL) {
             for (auto &conn : priv->drm_->connectors()) {
@@ -438,9 +460,9 @@ static int hw_output_initialize(struct hw_output_device* dev, void* data)
         }
         ALOGD("primary: %p extend: %p ", priv->primary, priv->extend);
     }
+
     return 0;
 }
-
 
 /*****************************************************************************/
 
@@ -474,6 +496,7 @@ static int hw_output_set_mode(struct hw_output_device* dev, int dpy, const char*
                     &info.screen_info[slot].resolution.htotal,&info.screen_info[slot].resolution.vsync_start,
                     &info.screen_info[slot].resolution.vsync_end, &info.screen_info[slot].resolution.vtotal,
                     &info.screen_info[slot].resolution.flags, &info.screen_info[slot].resolution.clock);
+           info.screen_info[slot].resolution.vrefresh = (int)vfresh;
         } else {
             info.screen_info[slot].feature|= RESOLUTION_AUTO;
             memset(&info.screen_info[slot].resolution, 0, sizeof(info.screen_info[slot].resolution));
@@ -789,8 +812,9 @@ static int hw_output_get_cur_color_mode(struct hw_output_device* dev, int dpy, c
 static int hw_output_get_num_connectors(struct hw_output_device* dev, int, int* numConnectors)
 {
     hw_output_private_t* priv = (hw_output_private_t*)dev;
+    (void)priv;
 
-    *numConnectors = priv->drm_->connectors().size();
+    *numConnectors = mGlobalConns.size();//priv->drm_->connectors().size();
     return 0;
 }
 
@@ -805,7 +829,6 @@ static int hw_output_get_connector_state(struct hw_output_device* dev, int dpy, 
     } else {
         ret = -1;
     }
-
     return ret;
 }
 
@@ -993,13 +1016,15 @@ static connector_info_t* hw_output_get_connector_info(struct hw_output_device* d
     connector_info_t* connector_info = NULL;
     connector_info = (connector_info_t*)malloc(sizeof(connector_info_t) * priv->drm_->connectors().size());
     int i = 0;
-    for (auto &conn : priv->drm_->connectors()) {
-        connector_info[i].type = conn->get_type();
-        connector_info[i].id = (uint32_t)conn->connector_id();
-        connector_info[i].state = (uint32_t)conn->state();
+    for (auto &conn : mGlobalConns) {
+        DrmConnector* mConn = conn.second;
+        connector_info[i].type = mConn->get_type();
+        connector_info[i].id = (uint32_t)mConn->connector_id();
+        connector_info[i].state = (uint32_t)mConn->state();
         i++;
     }
     *size = i;
+    ALOGE("%s:%d i=%d", __FUNCTION__, __LINE__, i);
     return connector_info;
 }
 

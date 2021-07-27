@@ -32,6 +32,7 @@ cc_library_shared {
 		"rkdisplay/drmresources.cpp",
 		"rkdisplay/drmgamma.cpp",
         "rockchip/baseparameterv2.cpp",
+        "rockchip/baseparameter.cpp",
 		"hw_output.cpp",
 		],
     include_dirs: [
