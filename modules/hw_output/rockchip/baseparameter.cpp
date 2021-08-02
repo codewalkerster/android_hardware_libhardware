@@ -60,31 +60,56 @@ static void saveBcshConfig(struct file_base_paramer_v1 *base_paramer, int dpy){
 
     propertyStr = getPropertyString("persist.vendor.brightness.", dpy);
     property_get(propertyStr.c_str(), bcshProperty, "0");
-    if (atoi(bcshProperty) > 0)
-        base_paramer->main.bcsh.brightness = atoi(bcshProperty);
-    else
-        base_paramer->main.bcsh.brightness = DEFAULT_BRIGHTNESS;
-    
+    if(HWC_DISPLAY_PRIMARY == dpy){
+        if (atoi(bcshProperty) > 0)
+            base_paramer->main.bcsh.brightness = atoi(bcshProperty);
+        else
+            base_paramer->main.bcsh.brightness = DEFAULT_BRIGHTNESS;
+    } else {
+        if (atoi(bcshProperty) > 0)
+            base_paramer->aux.bcsh.brightness = atoi(bcshProperty);
+        else
+            base_paramer->aux.bcsh.brightness = DEFAULT_BRIGHTNESS;
+    }
     propertyStr = getPropertyString("persist.vendor.contrast.", dpy);
     property_get(propertyStr.c_str(), bcshProperty, "0");
-    if (atoi(bcshProperty) > 0)
-        base_paramer->main.bcsh.contrast = atoi(bcshProperty);
-    else
-        base_paramer->main.bcsh.contrast = DEFAULT_BRIGHTNESS;
-
+    if(HWC_DISPLAY_PRIMARY == dpy){
+        if (atoi(bcshProperty) > 0)
+            base_paramer->main.bcsh.contrast = atoi(bcshProperty);
+        else
+            base_paramer->main.bcsh.contrast = DEFAULT_BRIGHTNESS;
+    } else {
+        if (atoi(bcshProperty) > 0)
+           base_paramer->aux.bcsh.contrast = atoi(bcshProperty);
+        else
+           base_paramer->aux.bcsh.contrast = DEFAULT_BRIGHTNESS;
+    }
     propertyStr = getPropertyString("persist.vendor.saturation.", dpy);
     property_get(propertyStr.c_str(), bcshProperty, "0");
-    if (atoi(bcshProperty) > 0)
-        base_paramer->main.bcsh.saturation = atoi(bcshProperty);
-    else
-        base_paramer->main.bcsh.saturation = DEFAULT_BRIGHTNESS;
-
+    if(HWC_DISPLAY_PRIMARY == dpy){
+        if (atoi(bcshProperty) > 0)
+            base_paramer->main.bcsh.saturation = atoi(bcshProperty);
+        else
+            base_paramer->main.bcsh.saturation = DEFAULT_BRIGHTNESS;
+    } else {
+        if (atoi(bcshProperty) > 0)
+            base_paramer->aux.bcsh.saturation = atoi(bcshProperty);
+        else
+            base_paramer->aux.bcsh.saturation = DEFAULT_BRIGHTNESS;
+    }
     propertyStr = getPropertyString("persist.vendor.hue.", dpy);
     property_get(propertyStr.c_str(), bcshProperty, "0");
-    if (atoi(bcshProperty) > 0)
-        base_paramer->main.bcsh.hue = atoi(bcshProperty);
-    else
-        base_paramer->main.bcsh.hue = DEFAULT_BRIGHTNESS;
+    if(HWC_DISPLAY_PRIMARY == dpy){
+        if (atoi(bcshProperty) > 0)
+            base_paramer->main.bcsh.hue = atoi(bcshProperty);
+        else
+            base_paramer->main.bcsh.hue = DEFAULT_BRIGHTNESS;
+    } else {
+        if (atoi(bcshProperty) > 0)
+            base_paramer->aux.bcsh.hue = atoi(bcshProperty);
+        else
+            base_paramer->aux.bcsh.hue = DEFAULT_BRIGHTNESS;
+    }
 }
 
 BaseParameterV1::BaseParameterV1()
@@ -271,6 +296,7 @@ int BaseParameterV1::set_brightness(unsigned int connector_type, unsigned int co
     UN_USED(connector_type);
     UN_USED(connector_id);
     UN_USED(value);
+    saveConfig();
     return 0;
 }
 
@@ -279,6 +305,7 @@ int BaseParameterV1::set_contrast(unsigned int connector_type, unsigned int conn
     UN_USED(connector_type);
     UN_USED(connector_id);
     UN_USED(value);
+    saveConfig();
     return 0;
 }
 
@@ -287,6 +314,7 @@ int BaseParameterV1::set_saturation(unsigned int connector_type, unsigned int co
     UN_USED(connector_type);
     UN_USED(connector_id);
     UN_USED(value);
+    saveConfig();
     return 0;
 }
 
@@ -295,6 +323,7 @@ int BaseParameterV1::set_hue(unsigned int connector_type, unsigned int connector
     UN_USED(connector_type);
     UN_USED(connector_id);
     UN_USED(value);
+    saveConfig();
     return 0;
 }
 
@@ -324,9 +353,41 @@ int BaseParameterV1::get_gamma_lut_data(unsigned int connector_type, unsigned in
 
 int BaseParameterV1::set_gamma_lut_data(unsigned int connector_type, unsigned int connector_id, struct gamma_lut_data *data)
 {
-    UN_USED(connector_type);
-    UN_USED(connector_id);
-    UN_USED(data);
+    if (!hasInitial) {
+        ALOGW("baseparamter hasInitial false");
+        return -EINVAL; 
+    }
+
+    int file;
+    int offset = 0;
+    const char *filepath = GetBaseparameterFile();
+
+    if (!mBaseParameterInfos || !filepath) {
+        ALOGD("hw_output: saveConfig filepath is NULL mBaseParameterInfo=%p*********", mBaseParameterInfos);
+        sync();
+        return -ENOENT;
+    }
+
+    file = open(filepath, O_RDWR);
+    if (file < 0) {
+        ALOGW("base paramter file can not be opened");
+        sync();
+        return -EIO;
+    }
+
+    struct disp_info_v1* info_v1;
+    if (getDisplayId(connector_type, connector_id) == HWC_DISPLAY_PRIMARY) {
+        info_v1 = &mBaseParameterInfos->main;
+        offset = 0;
+    } else {
+        info_v1 = &mBaseParameterInfos->aux;
+        offset = BASE_OFFSET;
+    }
+    memcpy(&info_v1->mlutdata, data, sizeof(info_v1->mlutdata));
+    lseek(file, offset, SEEK_SET);
+    write(file, (char*)(info_v1), sizeof(struct disp_info_v1));
+    close(file);
+    sync();
     return 0;
 }
 
