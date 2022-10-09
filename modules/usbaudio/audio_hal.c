@@ -165,6 +165,8 @@ struct stream_in {
     audio_io_handle_t handle; // Unique identifier for a stream
 
     audio_patch_handle_t patch_handle; // Patch handle for this stream
+
+    bool device_connected;
 };
 
 // Map channel count to output channel mask
@@ -1293,6 +1295,11 @@ static ssize_t in_read(struct audio_stream_in *stream, void* buffer, size_t byte
             goto err;
         }
         in->standby = false;
+        in->device_connected = true;
+    }
+
+    if (in->device_connected == false) {
+        goto err;
     }
 
     // Only care about the first device as only one input device is allowed.
@@ -1325,6 +1332,10 @@ static ssize_t in_read(struct audio_stream_in *stream, void* buffer, size_t byte
     }
 
     ret = proxy_read(&device_info->proxy, read_buff, num_read_buff_bytes);
+    if (ret == -19) {
+        in->device_connected = false;
+    }
+    ALOGI("in_read ret %d ",ret);
     if (ret == 0) {
         if (num_device_channels != num_req_channels) {
             // ALOGV("chans dev:%d req:%d", num_device_channels, num_req_channels);
