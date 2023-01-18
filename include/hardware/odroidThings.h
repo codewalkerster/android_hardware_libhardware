@@ -97,8 +97,14 @@ typedef struct pwm_operations {
 typedef struct i2c_operations {
     void (*open)(int, uint32_t, int);
     void (*close)(int);
+    const std::vector<uint8_t> (*read)(int, int);
     const std::vector<uint8_t> (*readRegBuffer)(int, uint32_t, int);
+    uint16_t (*readRegWord)(int, uint32_t);
+    uint8_t (*readRegByte)(int, uint32_t);
+    Result (*write)(int, std::vector<uint8_t>, int);
     Result (*writeRegBuffer)(int, uint32_t, std::vector<uint8_t>, int);
+    Result (*writeRegWord)(int, uint32_t, uint16_t);
+    Result (*writeRegByte)(int, uint32_t, uint8_t);
 } i2c_operations_t;
 
 typedef struct uart_operations {
