@@ -77,6 +77,8 @@ typedef struct common_operations {
 } common_operations_t;
 
 typedef struct gpio_operations {
+    void (*open)(int);
+    void (*close)(int);
     bool (*getValue)(int);
     void (*setDirection)(int, direction_t);
     void (*setValue)(int, bool);
