@@ -32,7 +32,7 @@
 #define PIN_MAX 41
 #define I2C_MAX 2
 #define PWM_MAX 4
-#define SPI_MAX 1
+#define SPI_MAX 2
 
 namespace hardware {
 namespace hardkernel {
@@ -47,26 +47,30 @@ typedef struct pin{
 typedef struct i2c{
     std::string name;
     std::string path;
-    std::string pin_name_sda;
-    std::string pin_name_scl;
+    int sda;
+    int scl;
 } i2c_t;
 
 typedef struct pwm{
     int index;
-    int chip;
+    std::string path;
     int line;
 } pwm_t;
 
 typedef struct uart{
     std::string name;
     std::string path;
-    std::string pin_name_rx;
-    std::string pin_name_tx;
+    int rx;
+    int tx;
 } uart_t;
 
 typedef struct spi {
     std::string name;
     std::string path;
+    int sclk;
+    int mosi;
+    int miso;
+    int cs;
 } spi_t;
 
 typedef void (*function_t)(void);
