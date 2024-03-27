@@ -22,6 +22,7 @@
 #include <hardware/hardware.h>
 #include <vector>
 #include <string>
+#include <unistd.h>
 
 #include "odroidthings-base.h"
 
@@ -30,6 +31,8 @@
 
 #define PIN_MAX 41
 #define I2C_MAX 2
+#define PWM_MAX 4
+#define SPI_MAX 2
 
 namespace hardware {
 namespace hardkernel {
@@ -44,7 +47,31 @@ typedef struct pin{
 typedef struct i2c{
     std::string name;
     std::string path;
+    int sda;
+    int scl;
 } i2c_t;
+
+typedef struct pwm{
+    int index;
+    std::string path;
+    int line;
+} pwm_t;
+
+typedef struct uart{
+    std::string name;
+    std::string path;
+    int rx;
+    int tx;
+} uart_t;
+
+typedef struct spi {
+    std::string name;
+    std::string path;
+    int sclk;
+    int mosi;
+    int miso;
+    int cs;
+} spi_t;
 
 typedef void (*function_t)(void);
 
@@ -54,6 +81,8 @@ typedef struct common_operations {
 } common_operations_t;
 
 typedef struct gpio_operations {
+    void (*open)(int);
+    void (*close)(int);
     bool (*getValue)(int);
     void (*setDirection)(int, direction_t);
     void (*setValue)(int, bool);
@@ -74,11 +103,50 @@ typedef struct pwm_operations {
 typedef struct i2c_operations {
     void (*open)(int, uint32_t, int);
     void (*close)(int);
+    const std::vector<uint8_t> (*read)(int, int);
     const std::vector<uint8_t> (*readRegBuffer)(int, uint32_t, int);
+    uint16_t (*readRegWord)(int, uint32_t);
+    uint8_t (*readRegByte)(int, uint32_t);
+    Result (*write)(int, std::vector<uint8_t>, int);
     Result (*writeRegBuffer)(int, uint32_t, std::vector<uint8_t>, int);
+    Result (*writeRegWord)(int, uint32_t, uint16_t);
+    Result (*writeRegByte)(int, uint32_t, uint8_t);
 } i2c_operations_t;
 
+typedef struct uart_operations {
+    void (*open)(int);
+    void (*close)(int);
+    bool (*clearModemControl)(int, int);
+    bool (*flush)(int, int);
+    bool (*sendBreak)(int, int);
+    bool (*isSupportBaudrate)(int, int);
+    bool (*setBaudrate)(int, int);
+    bool (*setDataSize)(int, int);
+    bool (*setHardwareFlowControl)(int, int);
+    bool (*setModemControl)(int, int);
+    bool (*setParity)(int, int);
+    bool (*setStopBits)(int, int);
+
+    const std::vector<uint8_t> (*read)(int, int);
+    ssize_t (*write)(int, std::vector<uint8_t>, int);
+
+    void (*registerCallback)(int, function_t);
+    void (*unregisterCallback)(int);
+} uart_operations_t;
+
 typedef struct spi_operations {
+    void (*open)(int);
+    void (*close)(int);
+    bool (*setBitJustification)(int, uint8_t);
+    bool (*setBitsPerWord)(int, uint8_t);
+    bool (*setMode)(int, uint8_t);
+    bool (*setCsChange)(int, bool);
+    bool (*setDelay)(int, uint16_t);
+    bool (*setFrequency)(int, uint32_t);
+
+    const std::vector<uint8_t> (*transfer)(int, std::vector<uint8_t>, int);
+    bool (*write)(int, std::vector<uint8_t>, int);
+    const std::vector<uint8_t> (*read)(int, int);
 } spi_operations_t;
 
 typedef struct things_device {
@@ -87,7 +155,8 @@ typedef struct things_device {
     gpio_operations_t gpio_ops;
     pwm_operations_t pwm_ops;
     i2c_operations_t i2c_ops;
-    //spi_operations_t spi_ops;
+    uart_operations_t uart_ops;
+    spi_operations_t spi_ops;
 } things_device_t;
 
 typedef struct things_module {
