@@ -30,8 +30,8 @@
 #define ODROID_THINGS_HARDWARE_MODULE_ID    "odroidThings"
 
 #define PIN_MAX 41
-#define I2C_MAX 2
-#define PWM_MAX 4
+#define I2C_MAX 3
+#define PWM_MAX 6
 #define SPI_MAX 2
 
 namespace hardware {
